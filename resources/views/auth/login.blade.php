@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin — Website Feature Configurator</title>
+    <title>Login Admin — Funix Configurator</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +11,7 @@
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full font-sans antialiased text-slate-100 flex items-center justify-center p-4 selection:bg-indigo-500 selection:text-white relative overflow-hidden">
+<body class="h-full font-sans antialiased text-slate-100 flex items-center justify-center p-4 selection:bg-indigo-500 selection:text-white relative overflow-hidden hallmark-bg">
     <!-- Ambient Glow Background -->
     <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -19,13 +19,11 @@
     <div class="w-full max-w-md relative z-10 space-y-6">
         <!-- Logo & Header -->
         <div class="text-center space-y-2">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 shadow-xl shadow-indigo-500/25 mb-2">
-                <svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white dark:bg-[#141b2d] border border-slate-200 dark:border-white/10 shadow-xl shadow-indigo-500/10 mb-2 p-3">
+                <img src="{{ asset('images/logo.png') }}" alt="Funix Logo" class="w-full h-full object-contain dark:invert">
             </div>
-            <h1 class="text-2xl font-bold tracking-tight text-white">Website Feature Configurator</h1>
-            <p class="text-sm text-slate-400">Masuk ke Panel Administrasi Master Data</p>
+            <h1 class="text-2xl font-bold tracking-tight text-[var(--tally-ink-0)] font-mono">Funix Console</h1>
+            <p class="text-sm text-[var(--tally-ink-2)]">Masuk ke Panel Administrasi Master Data</p>
         </div>
 
         <!-- Login Card -->

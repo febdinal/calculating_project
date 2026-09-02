@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Estimasi Biaya Website — Paket {{ $package->name }}</title>
+    <title>Estimasi Biaya Website — Funix</title>
     <style>
         @page {
             size: A4 portrait;
@@ -186,9 +186,14 @@
     <div class="header">
         <table>
             <tr>
-                <td>
-                    <h1 class="title">ESTIMASI BIAYA WEBSITE</h1>
-                    <div class="subtitle">Website Feature Configurator & Price Calculator</div>
+                <td style="width: 50px; vertical-align: middle;">
+                    @if (file_exists(public_path('images/logo.png')))
+                        <img src="{{ public_path('images/logo.png') }}" style="height: 42px; width: auto;" alt="Funix">
+                    @endif
+                </td>
+                <td style="vertical-align: middle; padding-left: 10px;">
+                    <h1 class="title">FUNIX — ESTIMASI BIAYA WEBSITE</h1>
+                    <div class="subtitle">Funix Feature Configurator & Price Calculator</div>
                 </td>
                 <td class="text-right" style="vertical-align: middle;">
                     <div style="font-size: 9pt; color: #64748b;">
@@ -321,7 +326,7 @@
 
     <!-- Footer -->
     <div class="footer">
-        Website Feature Configurator &bull; Dokumen dibuat otomatis pada {{ $generatedAt->translatedFormat('d F Y, H:i') }} WIB
+        Funix &bull; Dokumen dibuat otomatis pada {{ $generatedAt->translatedFormat('d F Y, H:i') }} WIB
     </div>
 
 </body>

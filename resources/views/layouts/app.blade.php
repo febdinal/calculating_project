@@ -1,111 +1,151 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-slate-950">
+<html lang="id" class="h-full light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Website Feature Configurator') — Kalkulator Fitur & Estimasi Biaya</title>
+    <title>@yield('title', 'Funix Configurator') — Funix Pricing & Feature Engine</title>
     
-    <!-- Google Fonts -->
+    <!-- Instant Theme Detection Script -->
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            } else {
+                document.documentElement.classList.add('light');
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+
+    <!-- Google Fonts: Geist, Geist Mono, Plus Jakarta Sans, Instrument Serif -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600;700&family=Geist:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
-<body class="h-full font-sans antialiased text-slate-100 bg-slate-950 selection:bg-indigo-500 selection:text-white flex flex-col">
-    <!-- Ambient Background Glow -->
-    <div class="fixed top-0 left-1/4 w-[600px] h-[350px] bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
-    <div class="fixed bottom-0 right-1/4 w-[600px] h-[350px] bg-purple-600/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
+<body class="h-full font-sans antialiased text-[var(--tally-ink-0)] hallmark-bg selection:bg-indigo-600 selection:text-white flex flex-col min-h-screen">
 
-    <!-- Navigation Bar -->
-    <header class="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/80 transition-all">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
-            <!-- Brand -->
-            <a href="{{ route('home') }}" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-                    <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
+    <!-- Hallmark N5 Floating Pill Navigation Bar (Fully Responsive) -->
+    <div class="fixed top-3 inset-x-0 z-50 flex justify-center px-3 sm:px-4 pointer-events-none">
+        <header class="pointer-events-auto flex items-center justify-between gap-1.5 sm:gap-6 px-2.5 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[var(--tally-nav-bg)] backdrop-blur-2xl border border-[var(--tally-card-border)] shadow-[var(--tally-nav-shadow)] max-w-5xl w-full transition-all">
+            
+            <!-- Brand Mark -->
+            <a href="{{ route('home') }}" class="flex items-center gap-2 group shrink-0">
+                <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[var(--tally-subtle-bg)] border border-[var(--tally-card-border)] p-1 flex items-center justify-center shadow-xs">
+                    <img src="{{ asset('images/logo.png') }}" alt="Funix Logo" class="w-4 h-4 sm:w-5 sm:h-5 object-contain dark:invert group-hover:scale-105 transition-transform">
                 </div>
-                <div>
-                    <span class="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
-                        Website Feature <span class="text-indigo-400 font-extrabold">Configurator</span>
+                <div class="flex items-center gap-1 font-mono">
+                    <span class="font-bold text-xs tracking-tight text-[var(--tally-ink-0)]">
+                        Funix
                     </span>
-                    <p class="text-[11px] text-slate-400 font-medium">Kalkulator Fitur & Estimasi Biaya</p>
+                    <span class="hidden md:inline text-indigo-600 dark:text-indigo-400 font-extrabold text-xs">Configurator</span>
                 </div>
             </a>
 
-            <!-- Navigation Links -->
-            <nav class="hidden md:flex items-center gap-1.5">
-                <a href="{{ route('packages.select') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('packages.select') || request()->routeIs('home') ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-slate-300 hover:text-white hover:bg-slate-900' }}">
-                    1. Pilihan Paket
+            <!-- Segmented Route Links (Responsive Labels) -->
+            <nav class="flex items-center gap-0.5 sm:gap-1 bg-[var(--tally-subtle-bg)] p-0.5 sm:p-1 rounded-full border border-[var(--tally-card-border)] text-[10px] sm:text-[11px] font-medium font-mono shrink-0">
+                <a href="{{ route('packages.select') }}" class="px-2.5 sm:px-3 py-1 rounded-full transition-all {{ request()->routeIs('packages.select') || request()->routeIs('home') ? 'bg-indigo-600 text-white font-semibold shadow-xs' : 'text-[var(--tally-ink-2)] hover:text-[var(--tally-ink-0)]' }}">
+                    <span class="hidden sm:inline">1. </span>Paket
                 </a>
-                <a href="{{ route('calculator') }}" class="px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors {{ request()->routeIs('calculator') ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' : 'text-slate-300 hover:text-white hover:bg-slate-900' }}">
-                    2. Kanban Configurator
+                <a href="{{ route('calculator') }}" class="px-2.5 sm:px-3 py-1 rounded-full transition-all {{ request()->routeIs('calculator') ? 'bg-indigo-600 text-white font-semibold shadow-xs' : 'text-[var(--tally-ink-2)] hover:text-[var(--tally-ink-0)]' }}">
+                    <span class="hidden sm:inline">2. </span>Kanban
                 </a>
             </nav>
 
-            <!-- Action Buttons / Admin Link -->
-            <div class="flex items-center gap-3">
+            <!-- Actions, Theme Switcher & CTA -->
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <!-- Theme Mode Toggle Button -->
+                <button type="button" onclick="toggleThemeMode()" id="themeToggleBtn" class="w-7 h-7 rounded-full bg-[var(--tally-subtle-bg)] border border-[var(--tally-card-border)] text-xs flex items-center justify-center hover:scale-105 active:scale-95 transition-all text-[var(--tally-ink-1)]" title="Ganti Mode Light / Dark">
+                    <span id="themeToggleIcon">☀️</span>
+                </button>
+
                 @auth
                     @if (auth()->user()->isAdmin())
-                        <a href="{{ route('admin.dashboard') }}" class="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-indigo-500/30 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 transition-all">
-                            <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
-                            <span>Admin Panel</span>
+                        <a href="{{ route('admin.dashboard') }}" class="hidden sm:inline-flex px-2.5 sm:px-3 py-1 rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 text-[10px] sm:text-[11px] font-semibold border border-indigo-500/30 transition-colors font-mono">
+                            Admin
                         </a>
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
-                            @csrf
-                            <button type="submit" class="px-3 py-2 text-xs font-medium text-slate-400 hover:text-rose-400 transition-colors">
-                                Keluar
-                            </button>
-                        </form>
                     @endif
                 @else
-                    <a href="{{ route('login') }}" class="px-3.5 py-2 rounded-xl text-slate-400 hover:text-slate-200 text-xs font-semibold transition-colors">
-                        Admin Login
+                    <a href="{{ route('login') }}" class="hidden sm:inline-block text-[11px] text-[var(--tally-ink-2)] hover:text-[var(--tally-ink-0)] px-2 py-1 transition-colors font-medium font-mono">
+                        Login
                     </a>
                 @endauth
 
-                <a href="{{ route('calculator') }}" class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-lg shadow-indigo-600/30 hover:shadow-indigo-600/50 transition-all flex items-center gap-2">
-                    <span>Buka Kalkulator</span>
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                <a href="{{ route('calculator') }}" class="tally-btn px-2.5 sm:px-3.5 py-1.5 rounded-full bg-indigo-600 hover:bg-indigo-700 dark:bg-white dark:text-[#07090e] dark:hover:bg-slate-200 text-white text-[11px] sm:text-xs font-bold transition-all shadow-[0_2px_10px_rgba(79,70,229,0.25)] dark:shadow-[0_2px_10px_rgba(255,255,255,0.2)] flex items-center gap-1 font-mono">
+                    <span>Mulai</span>
+                    <span class="text-[10px]">&rarr;</span>
                 </a>
             </div>
-        </div>
-    </header>
+        </header>
+    </div>
 
-    <!-- Main Content -->
-    <main class="flex-1">
+    <!-- Main Content Area (Spaced for floating pill nav) -->
+    <main class="flex-1 pt-18 sm:pt-20">
         @yield('content')
     </main>
 
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- Footer -->
-    <footer class="border-t border-slate-800/80 bg-slate-950 py-8 text-center text-xs text-slate-500">
-        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>&copy; {{ date('Y') }} Website Feature Configurator — Kalkulator Fitur & Estimasi Biaya.</p>
-            <div class="flex items-center gap-4 text-slate-400">
-                <span>Konfigurasi Cepat &bull; Realtime Calculation &bull; Unduh PDF Langsung</span>
+    <!-- Hallmark Minimalist Footer -->
+    <footer class="border-t border-[var(--tally-card-border)] bg-[var(--tally-paper-1)] py-8 text-xs text-[var(--tally-ink-2)] mt-16 transition-colors">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono">
+            <div class="flex items-center gap-2">
+                <span class="tally-dot-live"></span>
+                <span>Funix &bull; Website Feature Configurator</span>
+            </div>
+            <div class="text-[var(--tally-ink-2)]">
+                <span>Funix Precision Pricing &bull; Realtime Calculation &bull; Zero Fluff</span>
             </div>
         </div>
     </footer>
 
-    <!-- Global Toast Script -->
+    <!-- Theme Toggle & Toast Scripts -->
     <script>
+        function updateThemeIcon() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const iconEl = document.getElementById('themeToggleIcon');
+            if (iconEl) {
+                iconEl.innerText = isDark ? '🌙' : '☀️';
+            }
+        }
+
+        function toggleThemeMode() {
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            updateThemeIcon();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateThemeIcon();
+        });
+
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             if (!container) return;
 
             const toast = document.createElement('div');
-            toast.className = `pointer-events-auto px-4 py-3 rounded-xl border text-xs font-semibold shadow-2xl flex items-center gap-2.5 transition-all duration-300 transform translate-y-4 opacity-0 ${
-                type === 'success' ? 'bg-emerald-950/90 border-emerald-500/40 text-emerald-300' :
-                type === 'warning' ? 'bg-amber-950/90 border-amber-500/40 text-amber-300' :
-                type === 'error' ? 'bg-rose-950/90 border-rose-500/40 text-rose-300' :
-                'bg-slate-900/90 border-slate-700 text-slate-200'
+            toast.className = `pointer-events-auto px-4 py-2.5 rounded-2xl border text-xs font-semibold shadow-2xl flex items-center gap-2.5 transition-all duration-300 transform translate-y-3 opacity-0 backdrop-blur-xl ${
+                type === 'success' ? 'bg-emerald-50 dark:bg-[#0f291e]/90 border-emerald-500/40 text-emerald-800 dark:text-emerald-300' :
+                type === 'warning' ? 'bg-amber-50 dark:bg-[#291f0f]/90 border-amber-500/40 text-amber-800 dark:text-amber-300' :
+                type === 'error' ? 'bg-rose-50 dark:bg-[#290f14]/90 border-rose-500/40 text-rose-800 dark:text-rose-300' :
+                'bg-white dark:bg-[#141b2d]/90 border-[var(--tally-card-border)] text-[var(--tally-ink-0)]'
             }`;
 
             toast.innerHTML = `
@@ -115,13 +155,13 @@
 
             container.appendChild(toast);
             setTimeout(() => {
-                toast.classList.remove('translate-y-4', 'opacity-0');
+                toast.classList.remove('translate-y-3', 'opacity-0');
             }, 10);
 
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
+                setTimeout(() => toast.remove(), 250);
+            }, 3000);
         }
     </script>
     @stack('scripts')
