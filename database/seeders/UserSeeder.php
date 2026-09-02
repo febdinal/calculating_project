@@ -10,23 +10,22 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        User::firstOrCreate(
+        User::updateOrCreate(
+            ['email' => 'admin@featureconfig.com'],
+            [
+                'name' => 'Administrator',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+            ]
+        );
+
+        // Also create admin@ecomconfig.com for backward compatibility
+        User::updateOrCreate(
             ['email' => 'admin@ecomconfig.com'],
             [
                 'name' => 'Administrator',
                 'password' => Hash::make('password'),
                 'role' => 'admin',
-                'email_verified_at' => now(),
-            ]
-        );
-
-        User::firstOrCreate(
-            ['email' => 'demo@ecomconfig.com'],
-            [
-                'name' => 'Demo User',
-                'password' => Hash::make('password'),
-                'role' => 'user',
-                'email_verified_at' => now(),
             ]
         );
     }

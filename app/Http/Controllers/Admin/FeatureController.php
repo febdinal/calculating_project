@@ -5,10 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Feature;
-use App\Models\FeatureDependency;
-use App\Models\FeaturePrice;
-use App\Models\Package;
-use App\Models\PackageFeature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -17,165 +13,241 @@ use Illuminate\View\View;
 class FeatureController extends Controller
 {
     /**
-     * Display a listing of features with filtering.
+     * Tampilkan daftar fitur utama beserta sub-fiturnya.
      */
     public function index(Request $request): View
     {
-        $query = Feature::with(['category', 'prices', 'requiredFeatures'])
-            ->withCount('prices');
+        $query = Feature::whereNull('parent_id')
+            ->with(['category', 'subFeatures' => function ($q) {
+                $q->orderBy('sort_order');
+            }])
+            ->withCount('subFeatures');
 
-        // Filter by category
         if ($request->filled('category')) {
             $query->where('category_id', $request->input('category'));
         }
 
-        // Search by name / slug
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('slug', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
-        // Filter by infrastructure flag
-        if ($request->filled('type')) {
-            if ($request->input('type') === 'infrastructure') {
-                $query->where('is_infrastructure', true);
-            } elseif ($request->input('type') === 'functional') {
-                $query->where('is_infrastructure', false);
-            }
-        }
-
         $features = $query->orderBy('category_id')
             ->orderBy('sort_order')
-            ->paginate(20)
+            ->paginate(15)
             ->withQueryString();
 
-        $categories = Category::orderBy('sort_order')->get();
+        $categories = Category::where('status', 'active')->orderBy('sort_order')->get();
 
         return view('admin.features.index', compact('features', 'categories'));
     }
 
     /**
-     * Show the form for creating a new feature.
+     * Form tambah fitur baru.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $categories = Category::where('status', 'active')->orderBy('sort_order')->get();
-        $otherFeatures = Feature::where('status', 'active')->orderBy('name')->get();
+        $parentFeatures = Feature::whereNull('parent_id')->orderBy('name')->get();
+        $selectedParentId = $request->query('parent_id');
 
-        return view('admin.features.create', compact('categories', 'otherFeatures'));
+        return view('admin.features.create', compact('categories', 'parentFeatures', 'selectedParentId'));
     }
 
     /**
-     * Store a newly created feature in storage.
+     * Simpan fitur baru (Utama atau Sub-Fitur).
      */
     public function store(Request $request): RedirectResponse
     {
+        if ($request->has('price')) {
+            $cleanPrice = preg_replace('/[^0-9]/', '', (string) $request->input('price'));
+            $request->merge(['price' => $cleanPrice === '' ? 0 : (float) $cleanPrice]);
+        }
+
+        if ($request->has('sub_features') && is_array($request->input('sub_features'))) {
+            $subs = $request->input('sub_features');
+            foreach ($subs as $k => $sub) {
+                if (isset($sub['price'])) {
+                    $cleanSubPrice = preg_replace('/[^0-9]/', '', (string) $sub['price']);
+                    $subs[$k]['price'] = $cleanSubPrice === '' ? 0 : (float) $cleanSubPrice;
+                }
+            }
+            $request->merge(['sub_features' => $subs]);
+        }
+
         $validated = $request->validate([
-            'category_id' => ['required', 'exists:categories,id'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'parent_id' => ['nullable', 'exists:features,id'],
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'unique:features,slug'],
             'description' => ['nullable', 'string'],
             'icon' => ['nullable', 'string', 'max:50'],
-            'is_infrastructure' => ['boolean'],
-            'sort_order' => ['integer', 'min:0'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive'],
-            'dependencies' => ['nullable', 'array'],
-            'dependencies.*' => ['exists:features,id'],
+            'sub_features' => ['nullable', 'array'],
+            'sub_features.*.name' => ['required_with:sub_features', 'string', 'max:255'],
+            'sub_features.*.price' => ['nullable', 'numeric', 'min:0'],
+            'sub_features.*.sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
 
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['name']);
+            $originalSlug = $validated['slug'];
+            $count = 1;
+            while (Feature::where('slug', $validated['slug'])->exists()) {
+                $validated['slug'] = "{$originalSlug}-{$count}";
+                $count++;
+            }
         }
 
-        $validated['is_infrastructure'] = $request->boolean('is_infrastructure');
+        // Jika sub-fitur langsung, warisi category_id dari parent jika kosong
+        if (! empty($validated['parent_id'])) {
+            $parent = Feature::find($validated['parent_id']);
+            if ($parent && empty($validated['category_id'])) {
+                $validated['category_id'] = $parent->category_id;
+            }
+        }
+
+        $validated['price'] = $validated['price'] ?? 0;
         $validated['sort_order'] = $validated['sort_order'] ?? (Feature::where('category_id', $validated['category_id'])->max('sort_order') + 1);
 
         $feature = Feature::create($validated);
 
-        // Attach dependencies
-        if (! empty($validated['dependencies'])) {
-            foreach ($validated['dependencies'] as $depId) {
-                FeatureDependency::create([
-                    'feature_id' => $feature->id,
-                    'required_feature_id' => $depId,
-                ]);
+        // Jika fitur utama memiliki sub-fitur dinamis
+        if (empty($validated['parent_id']) && ! empty($request->input('sub_features'))) {
+            $totalSubPrice = 0;
+            foreach ($request->input('sub_features') as $index => $subData) {
+                if (! empty($subData['name'])) {
+                    $subPrice = isset($subData['price']) && $subData['price'] !== '' ? (float) $subData['price'] : 0;
+                    $totalSubPrice += $subPrice;
+
+                    Feature::create([
+                        'category_id' => $feature->category_id,
+                        'parent_id' => $feature->id,
+                        'name' => $subData['name'],
+                        'slug' => Str::slug($feature->slug.'-'.$subData['name'].'-'.uniqid()),
+                        'price' => $subPrice,
+                        'sort_order' => $subData['sort_order'] ?? ($index + 1),
+                        'status' => 'active',
+                    ]);
+                }
             }
+
+            // Update harga fitur utama dari total harga sub-fitur
+            if ($totalSubPrice > 0) {
+                $feature->update(['price' => $totalSubPrice]);
+            }
+        } elseif (! empty($validated['parent_id'])) {
+            // Jika ini adalah penambahan sub-fitur langsung, update harga parent
+            $parent = Feature::find($validated['parent_id']);
+            $parent?->syncPriceFromSubFeatures();
         }
 
-        // Create default standard price record
-        FeaturePrice::create([
-            'feature_id' => $feature->id,
-            'complexity' => 'standard',
-            'price_type' => 'fixed',
-            'cost_price' => null,
-            'selling_price' => null,
-            'is_default' => true,
-            'status' => 'active',
-        ]);
-
-        // Attach to existing packages with default status
-        $packages = Package::all();
-        foreach ($packages as $package) {
-            PackageFeature::create([
-                'package_id' => $package->id,
-                'feature_id' => $feature->id,
-                'status' => $feature->is_infrastructure ? 'included' : 'not_available',
-            ]);
-        }
-
-        return redirect()->route('admin.pricing.feature', $feature)
-            ->with('success', "Fitur '{$feature->name}' berhasil dibuat! Silakan atur harga internal (cost) dan jual (selling).");
+        return redirect()->route('admin.features.index')
+            ->with('success', "Fitur '{$feature->name}' berhasil ditambahkan.");
     }
 
     /**
-     * Show the form for editing the specified feature.
+     * Form edit fitur.
      */
     public function edit(Feature $feature): View
     {
         $categories = Category::where('status', 'active')->orderBy('sort_order')->get();
-        $otherFeatures = Feature::where('id', '!=', $feature->id)->where('status', 'active')->orderBy('name')->get();
-        $currentDependencies = $feature->dependencies()->pluck('required_feature_id')->toArray();
+        $parentFeatures = Feature::whereNull('parent_id')
+            ->where('id', '!=', $feature->id)
+            ->orderBy('name')
+            ->get();
 
-        return view('admin.features.edit', compact('feature', 'categories', 'otherFeatures', 'currentDependencies'));
+        $feature->load('subFeatures');
+
+        return view('admin.features.edit', compact('feature', 'categories', 'parentFeatures'));
     }
 
     /**
-     * Update the specified feature in storage.
+     * Perbarui fitur.
      */
     public function update(Request $request, Feature $feature): RedirectResponse
     {
+        if ($request->has('price')) {
+            $cleanPrice = preg_replace('/[^0-9]/', '', (string) $request->input('price'));
+            $request->merge(['price' => $cleanPrice === '' ? 0 : (float) $cleanPrice]);
+        }
+
+        if ($request->has('sub_features') && is_array($request->input('sub_features'))) {
+            $subs = $request->input('sub_features');
+            foreach ($subs as $k => $sub) {
+                if (isset($sub['price'])) {
+                    $cleanSubPrice = preg_replace('/[^0-9]/', '', (string) $sub['price']);
+                    $subs[$k]['price'] = $cleanSubPrice === '' ? 0 : (float) $cleanSubPrice;
+                }
+            }
+            $request->merge(['sub_features' => $subs]);
+        }
+
         $validated = $request->validate([
-            'category_id' => ['required', 'exists:categories,id'],
+            'category_id' => ['nullable', 'exists:categories,id'],
+            'parent_id' => ['nullable', 'exists:features,id'],
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:features,slug,'.$feature->id],
             'description' => ['nullable', 'string'],
             'icon' => ['nullable', 'string', 'max:50'],
-            'is_infrastructure' => ['boolean'],
-            'sort_order' => ['integer', 'min:0'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive'],
-            'dependencies' => ['nullable', 'array'],
-            'dependencies.*' => ['exists:features,id'],
         ]);
 
-        $validated['is_infrastructure'] = $request->boolean('is_infrastructure');
-
+        $validated['price'] = $validated['price'] ?? 0;
         $feature->update($validated);
 
-        // Sync dependencies
-        $feature->dependencies()->delete();
-        if (! empty($validated['dependencies'])) {
-            foreach ($validated['dependencies'] as $depId) {
-                if ($depId != $feature->id) {
-                    FeatureDependency::create([
-                        'feature_id' => $feature->id,
-                        'required_feature_id' => $depId,
-                    ]);
+        // Simpan / update sub-fitur beserta harga masing-masing
+        if ($request->has('sub_features')) {
+            $subItems = $request->input('sub_features', []);
+            $keepIds = [];
+            $totalSubPrice = 0;
+
+            foreach ($subItems as $subData) {
+                if (! empty($subData['name'])) {
+                    $subPrice = isset($subData['price']) && $subData['price'] !== '' ? (float) $subData['price'] : 0;
+                    $totalSubPrice += $subPrice;
+
+                    if (! empty($subData['id'])) {
+                        $sub = Feature::find($subData['id']);
+                        if ($sub && $sub->parent_id == $feature->id) {
+                            $sub->update([
+                                'name' => $subData['name'],
+                                'price' => $subPrice,
+                                'sort_order' => $subData['sort_order'] ?? 0,
+                            ]);
+                            $keepIds[] = $sub->id;
+                        }
+                    } else {
+                        $newSub = Feature::create([
+                            'category_id' => $feature->category_id,
+                            'parent_id' => $feature->id,
+                            'name' => $subData['name'],
+                            'slug' => Str::slug($feature->slug.'-'.$subData['name'].'-'.uniqid()),
+                            'price' => $subPrice,
+                            'sort_order' => $subData['sort_order'] ?? 0,
+                            'status' => 'active',
+                        ]);
+                        $keepIds[] = $newSub->id;
+                    }
                 }
             }
+
+            // Hapus sub-fitur yang tidak ada dalam daftar
+            $feature->subFeatures()->whereNotIn('id', $keepIds)->delete();
+
+            // Auto-sync harga fitur utama dari total harga sub-fitur
+            if (count($keepIds) > 0) {
+                $feature->update(['price' => $totalSubPrice]);
+            }
+        } elseif ($feature->isSub() && $feature->parent) {
+            $feature->parent->syncPriceFromSubFeatures();
         }
 
         return redirect()->route('admin.features.index')
@@ -183,12 +255,17 @@ class FeatureController extends Controller
     }
 
     /**
-     * Remove the specified feature from storage.
+     * Hapus fitur.
      */
     public function destroy(Feature $feature): RedirectResponse
     {
         $name = $feature->name;
+        $parent = $feature->parent;
         $feature->delete();
+
+        if ($parent) {
+            $parent->syncPriceFromSubFeatures();
+        }
 
         return redirect()->route('admin.features.index')
             ->with('success', "Fitur '{$name}' berhasil dihapus.");

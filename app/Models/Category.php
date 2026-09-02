@@ -21,11 +21,16 @@ class Category extends Model
 
     public function features(): HasMany
     {
-        return $this->hasMany(Feature::class)->orderBy('sort_order');
+        return $this->hasMany(Feature::class);
     }
 
-    public function activeFeatures(): HasMany
+    public function mainFeatures(): HasMany
     {
-        return $this->hasMany(Feature::class)->where('status', 'active')->orderBy('sort_order');
+        return $this->hasMany(Feature::class)->whereNull('parent_id');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
     }
 }

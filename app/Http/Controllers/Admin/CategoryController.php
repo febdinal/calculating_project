@@ -12,11 +12,11 @@ use Illuminate\View\View;
 class CategoryController extends Controller
 {
     /**
-     * Display a listing of the categories.
+     * Tampilkan daftar kategori.
      */
     public function index(): View
     {
-        $categories = Category::withCount('features')
+        $categories = Category::withCount(['mainFeatures', 'features'])
             ->orderBy('sort_order')
             ->get();
 
@@ -24,7 +24,7 @@ class CategoryController extends Controller
     }
 
     /**
-     * Show the form for creating a new category.
+     * Form tambah kategori.
      */
     public function create(): View
     {
@@ -32,7 +32,7 @@ class CategoryController extends Controller
     }
 
     /**
-     * Store a newly created category in storage.
+     * Simpan kategori baru.
      */
     public function store(Request $request): RedirectResponse
     {
@@ -41,8 +41,8 @@ class CategoryController extends Controller
             'slug' => ['nullable', 'string', 'max:255', 'unique:categories,slug'],
             'description' => ['nullable', 'string'],
             'icon' => ['nullable', 'string', 'max:50'],
-            'color' => ['nullable', 'string', 'max:7'],
-            'sort_order' => ['integer', 'min:0'],
+            'color' => ['nullable', 'string', 'max:50'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive'],
         ]);
 
@@ -55,11 +55,11 @@ class CategoryController extends Controller
         Category::create($validated);
 
         return redirect()->route('admin.categories.index')
-            ->with('success', 'Kategori baru berhasil ditambahkan.');
+            ->with('success', "Kategori '{$validated['name']}' berhasil dibuat.");
     }
 
     /**
-     * Show the form for editing the specified category.
+     * Form edit kategori.
      */
     public function edit(Category $category): View
     {
@@ -67,7 +67,7 @@ class CategoryController extends Controller
     }
 
     /**
-     * Update the specified category in storage.
+     * Perbarui kategori.
      */
     public function update(Request $request, Category $category): RedirectResponse
     {
@@ -76,8 +76,8 @@ class CategoryController extends Controller
             'slug' => ['required', 'string', 'max:255', 'unique:categories,slug,'.$category->id],
             'description' => ['nullable', 'string'],
             'icon' => ['nullable', 'string', 'max:50'],
-            'color' => ['nullable', 'string', 'max:7'],
-            'sort_order' => ['integer', 'min:0'],
+            'color' => ['nullable', 'string', 'max:50'],
+            'sort_order' => ['nullable', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive'],
         ]);
 
@@ -88,14 +88,10 @@ class CategoryController extends Controller
     }
 
     /**
-     * Remove the specified category from storage.
+     * Hapus kategori.
      */
     public function destroy(Category $category): RedirectResponse
     {
-        if ($category->features()->count() > 0) {
-            return back()->with('error', "Kategori '{$category->name}' tidak dapat dihapus karena masih memiliki {$category->features()->count()} fitur terhubung.");
-        }
-
         $name = $category->name;
         $category->delete();
 

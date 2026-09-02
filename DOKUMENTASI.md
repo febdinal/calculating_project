@@ -1,358 +1,211 @@
-# 📘 Dokumentasi Lengkap Proyek: E-Commerce Cost Calculator & Project Configurator
+# 📘 Dokumentasi Resmi: Website Feature Configurator & Price Calculator
 
 ---
 
 ## 📑 Daftar Isi
-1. [Ringkasan Eksekutif](#1-ringkasan-eksekutif)
-2. [Teknologi & Lingkungan Sistem](#2-teknologi--lingkungan-sistem)
-3. [Arsitektur Sistem & Struktur Direktori](#3-arsitektur-sistem--struktur-direktori)
-4. [Skema Database & Relasi Entity (ERD)](#4-skema-database--relasi-entity-erd)
-5. [Fitur Utama & Alur Bisnis](#5-fitur-utama--alur-bisnis)
-   - [5.1 Visual Kanban Configurator](#51-visual-kanban-configurator)
-   - [5.2 Sistem Dependensi Antar-Fitur](#52-sistem-dependensi-antar-fitur)
-   - [5.3 Mekanisme Pembekuan Snapshot Harga (*Frozen Snapshots*)](#53-mekanisme-pembekuan-snapshot-harga-frozen-snapshots)
-   - [5.4 Keamanan Data Biaya Modal (*Zero Cost Leakage*)](#54-keamanan-data-biaya-modal-zero-cost-leakage)
-   - [5.5 Penerbitan Quotation & Ekspor PDF](#55-penerbitan-quotation--ekspor-pdf)
-   - [5.6 Panel Admin & Master Pricing Manager](#56-panel-admin--master-pricing-manager)
-6. [Formula Kalkulasi Finansial](#6-formula-kalkulasi-finansial)
-7. [Daftar Rute (Route Map) & Middleware](#7-daftar-rute-route-map--middleware)
-8. [Panduan Instalasi & Setup Lokal](#8-panduan-instalasi--setup-lokal)
-9. [Kredensial Default & Akun Pengujian](#9-kredensial-default--akun-pengujian)
-10. [Pengujian Otomatis (Automated Testing) & Standar Kode](#10-pengujian-otomatis-automated-testing--standar-kode)
+1. [Ringkasan Proyek & Prinsip Utama](#1-ringkasan-proyek--prinsip-utama)
+2. [Arsitektur & Tech Stack](#2-arsitektur--tech-stack)
+3. [Skema Database & Relasi Model](#3-skema-database--relasi-model)
+4. [Hierarki Fitur & Sub-Fitur](#4-hierarki-fitur--sub-fitur)
+5. [Formula & Logika Kalkulasi Harga](#5-formula--logika-kalkulasi-harga)
+6. [Alur Pengguna (User Flow) & Kanban Configurator](#6-alur-pengguna-user-flow--kanban-configurator)
+7. [Panel Administrasi Master Data](#7-panel-administrasi-master-data)
+8. [Penerbitan Dokumen PDF](#8-penerbitan-dokumen-pdf)
+9. [Daftar Rute (Route Map) & Middleware](#9-daftar-rute-route-map--middleware)
+10. [Panduan Instalasi & Pengujian](#10-panduan-instalasi--pengujian)
 
 ---
 
-## 1. Ringkasan Eksekutif
+## 1. Ringkasan Proyek & Prinsip Utama
 
-**E-Commerce Cost Calculator & Project Configurator** adalah aplikasi web berbasis Laravel yang dirancang untuk merencanakan anggaran teknis, menyusun konfigurasi fitur toko online secara interaktif melalui papan **Kanban Drag & Drop**, menghitung estimasi biaya sewa tahunan secara real-time, serta menerbitkan **Surat Penawaran Resmi (Quotation PDF)** berstandar profesional.
+**Website Feature Configurator** (Kalkulator Fitur & Estimasi Biaya) adalah aplikasi web berbasis Laravel untuk menyusun konfigurasi fitur website secara interaktif menggunakan papan **Kanban Drag & Drop**, menghitung estimasi biaya sewa tahunan secara realtime, dan menerbitkan dokumen **Estimasi Biaya (PDF)**.
 
-Aplikasi ini mengimplementasikan pemisahan tegas antara **Harga Jual Publik (*Selling Price*)** dan **Biaya Modal Internal (*Cost Price*)**, memastikan tidak terjadi kebocoran margin keuntungan ke sisi pengguna publik, sembari memberikan visibilitas finansial penuh bagi administrator bisnis.
+### Prinsip Utama Sistem:
+- **Bukan E-Commerce**: Tidak ada keranjang belanja, checkout, payment gateway, transaksi, atau invoice pembayaran.
+- **Bukan Project Management / CRM**: Tidak ada akun customer, penyimpanan draf proyek, atau quotation approval workflow.
+- **Sederhana & Bersih**: Bebas dari kompleksitas HPP, cost price, profit margin, modul add-on rumit, dependency engine, dan snapshot beku.
+- **Fokus Inti**: Pilihan Paket &rarr; Kanban Drag & Drop Fitur &rarr; Realtime Calculation &rarr; Generate PDF &rarr; Selesai.
 
 ---
 
-## 2. Teknologi & Lingkungan Sistem
+## 2. Arsitektur & Tech Stack
 
-| Komponen | Spesifikasi / Library | Keterangan |
+| Komponen | Teknologi | Keterangan |
 |---|---|---|
 | **Backend Framework** | Laravel 13.x | PHP 8.3+ |
-| **Database** | MySQL 8.0+ / MariaDB | Relational Database dengan Foreign Key Constraints |
-| **Frontend Styling** | Tailwind CSS 4.x | Utilitas modern via `@tailwindcss/vite` |
-| **Bundler & Build Tool** | Vite 8.x | HMR & Asset Optimization |
-| **JavaScript Engine** | Vanilla JS / Alpine.js Patterns | Native HTML5 Drag & Drop API |
-| **PDF Generator** | `barryvdh/laravel-dompdf` (DomPDF 3.1) | Render template Blade ke dokumen A4 PDF |
-| **Code Style Linter** | Laravel Pint | Standar PSR-12 / Laravel Code Style |
-| **Test Suite** | PHPUnit 12.x / Artisan Test | Feature & Unit Testing |
+| **Database** | MySQL 8.0+ | Struktur relasional sederhana (5 tabel utama) |
+| **Frontend Styling** | Tailwind CSS 4.x | Dark theme modern & glassmorphism |
+| **Bundler & Build Tool** | Vite 8.x | Asset compilation & HMR |
+| **Interaktivitas UI** | Vanilla JS / Native Drag & Drop | Drag & Drop interaktif 3 kolom + mobile tab |
+| **PDF Engine** | `barryvdh/laravel-dompdf` (DomPDF 3.1) | Dokumen estimasi biaya A4 rapi dan formal |
+| **Test Suite** | PHPUnit 12.x | 15 Feature Tests (100% Passed) |
 
 ---
 
-## 3. Arsitektur Sistem & Struktur Direktori
+## 3. Skema Database & Relasi Model
 
-Aplikasi menggunakan arsitektur MVC (Model-View-Controller) dengan penambahan layer **Service** (`CalculatorService`) untuk mengisolasi logika kalkulasi finansial server-side.
+Sistem hanya menggunakan 5 tabel inti:
 
-```
-calculating-project/
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   │   ├── Admin/                    # Controller khusus Panel Admin
-│   │   │   │   ├── AddonController.php
-│   │   │   │   ├── CategoryController.php
-│   │   │   │   ├── DashboardController.php
-│   │   │   │   ├── FeatureController.php
-│   │   │   │   ├── PackageController.php
-│   │   │   │   ├── PricingController.php
-│   │   │   │   └── ProjectController.php
-│   │   │   ├── AuthController.php        # Autentikasi Login/Logout
-│   │   │   ├── CalculatorController.php  # Halaman Paket & Kanban Board
-│   │   │   ├── Controller.php
-│   │   │   └── ProjectController.php     # Penyimpanan Proyek, Show, PDF
-│   │   └── Middleware/
-│   │       └── AdminOnly.php             # Proteksi Role Admin
-│   ├── Models/                           # Eloquent Models & Relasi
-│   │   ├── Addon.php
-│   │   ├── Category.php
-│   │   ├── Feature.php
-│   │   ├── FeatureDependency.php
-│   │   ├── FeaturePrice.php
-│   │   ├── Package.php
-│   │   ├── PackageFeature.php
-│   │   ├── Project.php
-│   │   ├── ProjectAddon.php
-│   │   ├── ProjectFeature.php
-│   │   ├── Quotation.php
-│   │   └── User.php
-│   └── Services/
-│       └── CalculatorService.php         # Engine Kalkulasi Harga & Snapshot
-├── database/
-│   ├── migrations/                       # 14 File Migrasi Skema Database
-│   └── seeders/                          # Data Seeder Default (Paket, Fitur, Harga, Add-on)
-├── resources/
-│   ├── css/                              # Tailwind CSS
-│   ├── js/                               # Skrip Frontend
-│   └── views/
-│       ├── admin/                        # View Blade Panel Admin
-│       ├── auth/                         # View Blade Login
-│       ├── calculator/                   # View Blade Kanban & Paket
-│       ├── layouts/                      # Layout Master (App, Admin, Guest)
-│       └── projects/                     # View Detail Proyek, PDF & Print
-├── routes/
-│   └── web.php                           # Definisi Rute Aplikasi
-└── tests/
-    └── Feature/                          # Test Otomatis (Kanban, Admin, Quotation)
-```
-
----
-
-## 4. Skema Database & Relasi Entity (ERD)
-
-### Hubungan Relasi Data Utama:
 ```
 +---------------+        1:N        +------------------+
 |   packages    | ----------------> | package_features | <---+ N:1
 +---------------+                   +------------------+     |
-       |                                                     |
-       | 1:N                                                 |
-       v                                                     |
-+---------------+        1:N        +------------------+     |
-|   projects    | ----------------> | project_features |     |
-+---------------+                   +------------------+     |
-  |     |                                                    |
-  |     | 1:N                       +------------------+     |
-  |     +-------------------------> |  project_addons  |     |
-  |                                 +------------------+     |
-  | 1:1                                                      |
-  +-------------------------------> +------------------+     |
-  |                                 |    quotations    |     |
-  |                                 +------------------+     |
-  |                                                          |
+                                                             |
 +---------------+        1:N        +------------------+     |
 |  categories   | ----------------> |     features     | ----+
 +---------------+                   +------------------+
-                                       |            |
-                                   1:N |        1:N |
-                                       v            v
-                      +-------------------+   +----------------------+
-                      |   feature_prices  |   | feature_dependencies |
-                      +-------------------+   +----------------------+
+                                       |            ^
+                                       | parent_id  |
+                                       +------------+ (Self-referencing Sub Features)
 ```
 
-### Penjelasan Tabel:
+### Rincian Tabel:
 
-1. **`packages`**: Menyimpan paket sewa dasar (*Basic*, *Medium*, *Professional*, *Web Custom*), harga dasar tahunan, dan status.
-2. **`categories`**: 10 Kategori fitur (*Website & Frontend*, *Produk*, *Transaksi*, *Pembayaran*, *Pengiriman*, *Marketing*, *Administrasi*, *SEO*, *Integrasi*, *Infrastruktur*).
-3. **`features`**: 39 master fitur e-commerce dengan penanda `is_infrastructure` untuk pilar hosting/domain/SSL/backup.
-4. **`package_features`**: Matriks status fitur per paket (`included`, `optional`, `not_available`).
-5. **`feature_prices`**: Harga modal internal (`cost_price`) dan harga jual (`selling_price`) per varian kompleksitas (*basic*, *standard*, *advanced*, *custom*).
-6. **`feature_dependencies`**: Relasi prasyarat antar fitur (contoh: *Payment Gateway* membutuhkan *Checkout Online*).
-7. **`addons`**: Modul tambahan seperti *Mobile App Android/iOS*, *Multi-vendor Marketplace*, *ERP/POS*, *AI Recommendation*.
-8. **`projects`**: Proyek yang disimpan customer/admin, menyimpan total nilai jual, modal internal, laba, dan status workflow (*draft*, *pending*, *approved*, *completed*, *rejected*).
-9. **`project_features`**: **Tabel Snapshot** fitur yang dipilih pada saat proyek dibuat. Menyimpan salinan nama fitur, kategori, harga jual, dan modal saat itu.
-10. **`project_addons`**: **Tabel Snapshot** add-on yang dipilih pada saat proyek dibuat.
-11. **`quotations`**: Data penawaran resmi dengan nomor unik (`QUO-YYYYMM-XXXX`), masa berlaku (30 hari), dan syarat & ketentuan penawaran.
-12. **`users`**: Data pengguna dan administrator (role `admin` atau `user`).
-
----
-
-## 5. Fitur Utama & Alur Bisnis
-
-### 5.1 Visual Kanban Configurator
-- **Antarmuka 3 Kolom**:
-  1. **Kolom Kiri (Available Features)**: Menampilkan fitur yang belum dipilih dengan filter kategori, indikator pencarian live, dan penanda paket.
-  2. **Kolom Tengah (Selected Features Dropzone)**: Area drop interaktif dengan kartu fitur terpilih, pengubah tingkat kompleksitas (*Basic / Standard / Advanced*), dan tombol hapus/kembalikan.
-  3. **Kolom Kanan (Live Sticky Summary)**: Rincian biaya paket dasar, penyesuaian/diskon fitur paket, total fitur tambahan, total add-on, dan tombol aksi (*Simpan Draf* / *Ajukan Penawaran Resmi*).
-- **Mobile Responsive 3-Tab Switcher**: Navigasi mudah di layar ponsel cerdas dengan tab *Katalog*, *Pilihan Saya*, dan *Ringkasan Biaya*.
-
-### 5.2 Sistem Dependensi Antar-Fitur
-- Jika pengguna memilih fitur yang memiliki ketergantungan teknis (misal: *Laporan Penjualan* memerlukan *Checkout & Transaksi*), sistem secara otomatis:
-  - Memberikan indikator peringatan visual di kartu fitur.
-  - Menyediakan tombol 1-klik **+ Tambah Syarat** untuk otomatis memasukkan fitur prasyarat ke kolom terpilih.
-
-### 5.3 Mekanisme Pembekuan Snapshot Harga (*Frozen Snapshots*)
-- Ketika proyek disimpan, seluruh nilai harga (harga paket, harga jual fitur, harga modal fitur, dan addon) disalin ke tabel `project_features` dan `project_addons`.
-- **Manfaat**: Jika di kemudian hari Administrator memperbarui daftar harga master di sistem, riwayat dan penawaran harga proyek yang telah diterbitkan sebelumnya **tetap stabil dan tidak berubah**.
-
-### 5.4 Keamanan Data Biaya Modal (*Zero Cost Leakage*)
-- Atribut `total_cost_price` dan `total_profit` dilindungi di level Eloquent Model menggunakan atribut PHP 8 `#[Hidden]`.
-- Controller publik (`CalculatorController` dan `ProjectController`) hanya mengembalikan payload `selling` yang sudah disanitasi.
-- Nilai HPP/Modal dan Persentase Margin Laba hanya dapat diakses oleh Administrator yang berautentikasi melalui middleware `AdminOnly`.
-
-### 5.5 Penerbitan Quotation & Ekspor PDF
-- Diterbitkan dengan format nomor resmi: `QUO-YYYYMM-XXXX`.
-- File PDF berstandar korporat dibuat menggunakan **DomPDF** mencakup:
-  - Header profil perusahaan & nomor surat penawaran.
-  - Data klien & ringkasan paket sewa tahunan.
-  - Tabel rincian fitur terpasang & varian kompleksitas.
-  - 5 Pilar Infrastruktur Standar (Hosting, Domain, SSL, Backup, Garansi Pemeliharaan).
-  - Syarat & ketentuan penawaran (masa berlaku 30 hari).
-  - Kolom tanda tangan resmi.
-
-### 5.6 Panel Admin & Master Pricing Manager
-- **Financial Dashboard**: Monitoring Total Omzet (Selling), Total HPP (Cost), Total Profit, dan Rata-rata Margin Keuntungan %.
-- **Feature Matrix Editor**: Pengaturan status fitur per paket (*Included*, *Add-on*, *Not Available*) dalam 1 klik.
-- **Batch Pricing Manager**: Form pengeditan massal untuk harga modal dan harga jual seluruh varian fitur.
-- **Project Workflow**: Manajemen approval status proyek (*Draft &rarr; Pending &rarr; Approved &rarr; Completed / Rejected*).
+1. **`users`**:
+   - `id`, `name`, `email`, `password`, `role` (`admin`/`user`), `timestamps`.
+   - Hanya digunakan untuk login Administrator.
+2. **`packages`**:
+   - `id`, `name`, `slug`, `description`, `price` (decimal), `period` (`tahun`), `status` (`active`/`inactive`), `sort_order`, `timestamps`.
+3. **`categories`**:
+   - `id`, `name`, `slug`, `description`, `icon`, `color`, `sort_order`, `status`, `timestamps`.
+4. **`features`**:
+   - `id`, `category_id` (FK), `parent_id` (FK nullable), `name`, `slug`, `description`, `icon`, `price` (decimal), `sort_order`, `status`, `timestamps`.
+   - `parent_id = NULL`: Fitur Utama (harga merupakan akumulasi total harga dari seluruh sub-fiturnya).
+   - `parent_id = {ID}`: Sub-Fitur (memiliki harga nominal masing-masing).
+5. **`package_features`**:
+   - `id`, `package_id` (FK), `feature_id` (FK), `timestamps`.
+   - Tabel pivot untuk menentukan fitur apa saja yang sudah termasuk ke dalam harga paket.
 
 ---
 
-## 6. Formula Kalkulasi Finansial
+## 4. Hierarki Fitur & Sub-Fitur
 
-Seluruh kalkulasi dijalankan di backend melalui `CalculatorService`:
+Setiap sub-fitur memiliki **harga tersendiri**, dan harga fitur utama dihitung secara otomatis dari total akumulasi harga sub-fiturnya:
 
 ```text
-1. Harga Jual Efektif Paket =
-   Maksimal(Harga_Paket_Dasar * 0.3, Harga_Paket_Dasar - Potongan_Fitur_Termasuk_Yang_Dihapus)
-   * Catatan: Fitur paket bawaan yang dihapus pengguna diberikan kompensasi kredit 50% dari harga standard.
-
-2. Subtotal Fitur Terpilih =
-   - Jika status 'included' dalam paket  -> Biaya Tambahan = Rp 0
-   - Jika status 'optional' (add-on)    -> Biaya Tambahan = Harga_Jual_Fitur(kompleksitas) * Kuantitas
-
-3. Total Harga Jual (Selling Price) =
-   Harga Jual Efektif Paket + Total Subtotal Fitur + Total Subtotal Add-on
-
-4. Total Biaya Modal Internal (Cost Price) =
-   Total Modal Fitur Termasuk (50%) + Total Modal Fitur Tambahan (100%) + Total Modal Add-on
-
-5. Laba Kotor (Gross Profit) =
-   Total Harga Jual - Total Biaya Modal Internal
-
-6. Margin Keuntungan (%) =
-   (Total Laba Kotor / Total Harga Jual) * 100%
+Katalog Produk (Fitur Utama - Total: Rp 1.500.000)
+├── Daftar Produk Grid dengan Filter Kategori (Rp 500.000)
+├── Halaman Detail Produk Lengkap (Rp 400.000)
+├── Variasi Produk (Ukuran, Warna, Opsi) (Rp 350.000)
+└── Pencarian Cepat dengan Live Search (Rp 250.000)
 ```
 
+- **Sub-Fitur**: Memiliki harga nominal satuan, deskripsi komponen, dan dapat dikelola di panel admin.
+- **Fitur Utama**: Total harga dihitung dari `SUM(sub_features.price)`.
+- **Transparansi Biaya**: Pada papan Kanban dan dokumen PDF, rincian harga setiap sub-fitur ditampilkan secara terbuka kepada pengguna.
+
 ---
 
-## 7. Daftar Rute (Route Map) & Middleware
+## 5. Formula & Logika Kalkulasi Harga
 
-### Rute Publik & Customer
-| Method | URI | Action Controller | Keterangan |
+Semua kalkulasi harga dilakukan melalui `CalculatorService`:
+
+```text
+1. HARGA FITUR = SUM(HARGA SUB-FITUR AKTIF)
+2. TOTAL ESTIMASI = HARGA PAKET + TOTAL HARGA FITUR TAMBAHAN
+```
+
+### Aturan Perhitungan:
+1. **Harga Sub-Fitur & Fitur**: Setiap sub-fitur memiliki harga tersendiri. Harga total fitur utama adalah penjumlahan seluruh sub-fiturnya.
+2. **Fitur Termasuk Paket (*Included*)**: Jika fitur terpilih sudah ada di dalam relasi `package_features` untuk paket yang aktif, harga tambahannya adalah **Rp 0** (sudah tercakup dalam harga paket).
+3. **Fitur Tambahan (*Additional*)**: Jika fitur terpilih tidak ada di dalam `package_features`, maka nominal harga fitur tersebut ditambahkan ke total.
+4. **Tampilan Kartu**: Harga fitur **tetap ditampilkan** nominal aslinya di kartu Kanban (tidak diubah menjadi Rp 0) dengan badge penjelas `Termasuk Paket` atau `Fitur Tambahan`. Dropdown sub-fitur juga merinci harga tiap komponennya.
+
+---
+
+## 6. Alur Pengguna (User Flow) & Kanban Configurator
+
+1. **Langkah 1: Pilih Paket (`/packages`)**
+   - Pengguna memilih paket awal (*Basic*, *Medium*, *Premium*).
+   - Mengklik *Pilih Paket* langsung mengarahkan ke `/calculator?package={slug}`.
+2. **Langkah 2: Konfigurasi Papan Kanban & Kustomisasi Sub-Fitur (`/calculator`)**
+   - **Kolom 1 (Fitur Tersedia)**: Menampilkan fitur yang belum dipilih dengan pencarian instan, filter kategori, nominal harga langsung, dan tombol *+ Tambah*.
+   - **Kolom 2 (Fitur Dipilih)**: 
+     - Drag & drop antar-kolom dan drag to reorder.
+     - **Kustomisasi Sub-Fitur**: Pengguna dapat mencentang/menonaktifkan masing-masing sub-fitur via checkbox interaktif, atau menggunakan tombol cepat *[Pilih Semua]* / *[Batal Semua]*.
+     - **Live Recalculation**: Harga fitur pada kartu dan total estimasi proyek otomatis berkurang/bertambah sesuai sub-fitur yang aktif dipilih.
+     - Tombol hapus (`×`) untuk mengembalikan fitur ke daftar tersedia.
+   - **Kolom 3 (Ringkasan Biaya)**: Menampilkan harga paket, daftar fitur tambahan dengan jumlah sub-fitur aktif, total estimasi realtime, dan tombol *Generate PDF*.
+3. **Langkah 3: Generate PDF (`/calculator/pdf`)**
+   - Sistem memvalidasi pilihan fitur dan sub-fitur aktif secara server-side.
+   - Dokumen PDF A4 diunduh/ditampilkan hanya mencantumkan sub-fitur yang dipilih oleh pengguna. Selesai!
+
+---
+
+## 7. Panel Administrasi Master Data
+
+Panel Admin (`/admin`) dilindungi middleware `['auth', 'admin']`:
+
+- **Dashboard**: Menampilkan total paket, kategori, fitur utama, dan sub-fitur.
+- **Paket (`/admin/packages`)**:
+  - CRUD Paket (nama, slug, harga, periode, urutan, status).
+  - Checklist Fitur Paket (`/admin/packages/{id}/features`): Antarmuka centang sederhana untuk menentukan fitur bawaan paket.
+- **Kategori (`/admin/categories`)**:
+  - CRUD Kategori (nama, icon emoji, warna, deskripsi, urutan).
+- **Fitur (`/admin/features`)**:
+  - CRUD Fitur Utama (kategori, icon, nama, harga nominal, deskripsi).
+  - Manajemen Sub-Fitur (dapat diinput cepat via textarea atau baris dinamis).
+
+---
+
+## 8. Penerbitan Dokumen PDF
+
+PDF adalah output akhir resmi yang memuat:
+- Judul: **ESTIMASI BIAYA WEBSITE**
+- Identitas Paket & Periode Sewa
+- Tabel Rincian Fitur Terpilih (No, Nama Fitur, Kategori, Status Termasuk/Tambahan, Harga)
+- Rincian Sub-Fitur yang tercakup
+- Box Ringkasan (Harga Paket, Total Fitur Tambahan, Total Estimasi Biaya)
+- Catatan formal keabsahan estimasi
+
+---
+
+## 9. Daftar Rute (Route Map) & Middleware
+
+### Rute Publik
+| Method | URI | Controller Action | Keterangan |
 |---|---|---|---|
-| `GET` | `/` atau `/packages` | `CalculatorController@packages` | Halaman katalog paket sewa & pilar infrastruktur |
-| `GET` | `/calculator` | `CalculatorController@index` | Papan Kanban Configurator interaktif |
-| `POST`| `/calculator/calculate` | `CalculatorController@calculate` | API kalkulasi estimasi harga dinamis (JSON) |
-| `POST`| `/projects` | `ProjectController@store` | Menyimpan konfigurasi proyek & snapshot harga |
-| `GET` | `/projects/{project}` | `ProjectController@show` | Tampilan publik detail proyek yang disimpan |
-| `POST`| `/projects/{project}/quotation` | `ProjectController@requestQuotation` | Mengajukan draf menjadi penawaran resmi |
-| `GET` | `/projects/{project}/pdf` | `ProjectController@pdf` | Download/Stream Surat Penawaran Resmi (PDF) |
-| `GET` | `/projects/{project}/print` | `ProjectController@printView` | Tampilan cetak langsung browser (@media print) |
-| `GET` | `/my-projects` | `ProjectController@myProjects` | Riwayat proyek pengguna / sesi tersimpan |
+| `GET` | `/` | Redirect ke `/packages` | Halaman awal |
+| `GET` | `/packages` | `CalculatorController@packages` | Katalog pilihan paket |
+| `GET` | `/calculator` | `CalculatorController@index` | Papan Kanban Configurator |
+| `POST`| `/calculator/calculate` | `CalculatorController@calculate` | API kalkulasi JSON realtime |
+| `POST`/`GET` | `/calculator/pdf` | `CalculatorController@pdf` | Generate & Download PDF |
 
 ### Rute Autentikasi
-| Method | URI | Action Controller | Keterangan |
+| Method | URI | Controller Action | Keterangan |
 |---|---|---|---|
-| `GET` | `/login` | `AuthController@showLoginForm` | Form login pengguna & admin |
-| `POST`| `/login` | `AuthController@login` | Proses autentikasi akun |
-| `POST`| `/logout` | `AuthController@logout` | Logout sesi aktif |
+| `GET` | `/login` | `AuthController@showLoginForm` | Form login admin |
+| `POST`| `/login` | `AuthController@login` | Proses autentikasi |
+| `POST`| `/logout` | `AuthController@logout` | Logout admin |
 
-### Rute Panel Admin (Prefix: `/admin`, Middleware: `['auth', 'admin']`)
-| Method | URI | Action Controller | Keterangan |
+### Rute Panel Admin (Middleware: `['auth', 'admin']`)
+| Method | URI | Controller Action | Keterangan |
 |---|---|---|---|
-| `GET` | `/admin` | `Admin\DashboardController@index` | Metrik finansial, omzet, laba & proyek terbaru |
-| `GET` | `/admin/packages` | `Admin\PackageController@index` | Daftar paket sewa tahunan |
-| `GET` | `/admin/packages/{id}/features` | `Admin\PackageController@features` | Matriks fitur per paket (Included/Add-on/NA) |
-| `PUT` | `/admin/packages/{id}/features` | `Admin\PackageController@updateFeatures` | Simpan perubahan matriks fitur paket |
-| `GET` | `/admin/categories` | `Admin\CategoryController@index` | Manajemen kategori fitur & palet warna |
-| `GET` | `/admin/features` | `Admin\FeatureController@index` | CRUD Master fitur & relasi dependensi |
-| `GET` | `/admin/pricing` | `Admin\PricingController@index` | Matriks Master Pricing (Batch Edit Modal & Jual) |
-| `POST`| `/admin/pricing/batch-update` | `Admin\PricingController@batchUpdate` | Batch update harga modal dan jual |
-| `GET` | `/admin/addons` | `Admin\AddonController@index` | CRUD modul add-on & custom development |
-| `GET` | `/admin/projects` | `Admin\ProjectController@index` | Daftar seluruh proyek beserta data HPP & Margin |
-| `GET` | `/admin/projects/{id}` | `Admin\ProjectController@show` | Detail proyek internal (HPP, Profit, Breakdown) |
-| `PATCH`| `/admin/projects/{id}/status` | `Admin\ProjectController@updateStatus` | Update status approval (*Approved, Rejected, dll.*) |
+| `GET` | `/admin` | `Admin\DashboardController@index` | Dashboard master data |
+| `GET`/`POST`/`PUT`/`DELETE` | `/admin/packages` | `Admin\PackageController` | CRUD Paket |
+| `GET`/`PUT` | `/admin/packages/{id}/features` | `Admin\PackageController@features` | Atur checklist fitur paket |
+| `GET`/`POST`/`PUT`/`DELETE` | `/admin/categories` | `Admin\CategoryController` | CRUD Kategori |
+| `GET`/`POST`/`PUT`/`DELETE` | `/admin/features` | `Admin\FeatureController` | CRUD Fitur & Sub-Fitur |
 
 ---
 
-## 8. Panduan Instalasi & Setup Lokal
+## 10. Panduan Instalasi & Pengujian
 
-### Prasyarat:
-- PHP >= 8.3 (dengan ekstensi `pdo_mysql`, `mbstring`, `openssl`, `gd`, `curl`)
-- Database MySQL / MariaDB
-- Composer >= 2.x
-- Node.js >= 20.x & npm
+### Setup Awal:
+```bash
+composer install
+npm install
+php artisan migrate:fresh --seed
+npm run build
+php artisan serve
+```
 
-### Langkah Pemasangan:
+### Kredensial Default Admin:
+- **Email**: `admin@featureconfig.com` (atau `admin@ecomconfig.com`)
+- **Password**: `password`
 
-1. **Masuk ke folder proyek**:
-   ```bash
-   cd c:/laragon/www/calculating-project
-   ```
-
-2. **Install Dependensi PHP & Node.js**:
-   ```bash
-   composer install
-   npm install
-   ```
-
-3. **Konfigurasi Environment (`.env`)**:
-   Salin `.env.example` ke `.env` (jika belum ada) dan sesuaikan konfigurasi database:
-   ```env
-   APP_NAME="E-Commerce Configurator"
-   APP_ENV=local
-   APP_KEY=base64:...
-   APP_DEBUG=true
-   APP_URL=http://localhost:8000
-
-   DB_CONNECTION=mysql
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_DATABASE=calculating_project
-   DB_USERNAME=root
-   DB_PASSWORD=
-   ```
-
-4. **Jalankan Migrasi & Database Seeder**:
-   ```bash
-   php artisan key:generate
-   php artisan migrate:fresh --seed
-   ```
-
-5. **Build Aset Frontend**:
-   ```bash
-   npm run build
-   # atau untuk mode development live-reload:
-   npm run dev
-   ```
-
-6. **Jalankan Web Server**:
-   ```bash
-   php artisan serve
-   ```
-   Aplikasi siap diakses melalui peramban web di: **`http://localhost:8000`**
-
----
-
-## 9. Kredensial Default & Akun Pengujian
-
-Database seeder telah menyiapkan akun bawaan untuk pengujian:
-
-| Tipe Akun | Email | Password | Hak Akses | URL Masuk |
-|---|---|---|---|---|
-| **Administrator** | `admin@ecomconfig.com` | `password` | Akses penuh Panel Admin, HPP, Margin, Master Pricing | `/login` &rarr; `/admin` |
-| **Demo Customer** | `demo@ecomconfig.com` | `password` | Akses pembuatan konfigurasi & riwayat proyek | `/login` &rarr; `/my-projects` |
-
----
-
-## 10. Pengujian Otomatis (Automated Testing) & Standar Kode
-
-### Menjalankan Automated Test Suite:
-Aplikasi dilengkapi pengujian unit dan fitur berbasis PHPUnit untuk memvalidasi:
-- Keamanan isolasi data biaya modal (*Zero Cost Leakage*).
-- Integritas perhitungan harga Kanban & diskon fitur.
-- Pembekuan snapshot harga saat proyek disimpan.
-- Pembuatan nomor quotation dan ekspor PDF.
-- Otorisasi rute Panel Admin.
-
-Jalankan perintah berikut:
+### Menjalankan Automated Tests:
 ```bash
 php artisan test
 ```
-
-### Memeriksa Format Kode (Laravel Pint):
-Untuk memastikan standar penulisan kode sesuai kaidah Laravel:
-```bash
-vendor/bin/pint --format agent
-```
-
----
-
-*Dokumentasi ini disusun sebagai panduan teknis dan operasional untuk sistem E-Commerce Cost Calculator & Project Configurator.*
+Seluruh 15 skenario pengujian unit & fitur berhasil dijalankan dengan hasil **100% Passed**.

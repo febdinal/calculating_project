@@ -16,13 +16,10 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->decimal('price', 15, 2)->nullable();
-            $table->enum('billing_period', ['monthly', 'annual'])->default('annual');
-            $table->string('target_user')->nullable();
-            $table->enum('price_type', ['fixed', 'custom'])->default('fixed');
-            $table->boolean('is_featured')->default(false);
+            $table->decimal('price', 15, 2)->default(0);
+            $table->string('period')->default('tahun');
+            $table->enum('status', ['active', 'inactive'])->default('active');
             $table->integer('sort_order')->default(0);
-            $table->enum('status', ['active', 'inactive', 'draft'])->default('active');
             $table->timestamps();
         });
     }

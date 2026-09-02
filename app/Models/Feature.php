@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['category_id', 'name', 'slug', 'description', 'icon', 'is_infrastructure', 'sort_order', 'status'])]
+#[Fillable(['category_id', 'parent_id', 'name', 'slug', 'description', 'icon', 'price', 'sort_order', 'status'])]
 class Feature extends Model
 {
     use HasFactory;
@@ -17,7 +17,7 @@ class Feature extends Model
     protected function casts(): array
     {
         return [
-            'is_infrastructure' => 'boolean',
+            'price' => 'decimal:2',
             'sort_order' => 'integer',
         ];
     }
@@ -27,44 +27,72 @@ class Feature extends Model
         return $this->belongsTo(Category::class);
     }
 
-    public function prices(): HasMany
+    public function parent(): BelongsTo
     {
-        return $this->hasMany(FeaturePrice::class);
+        return $this->belongsTo(Feature::class, 'parent_id');
     }
 
-    public function defaultPrice(): ?FeaturePrice
+    public function subFeatures(): HasMany
     {
-        return $this->prices()->where('is_default', true)->where('status', 'active')->first();
+        return $this->hasMany(Feature::class, 'parent_id')->orderBy('sort_order');
     }
 
-    public function packageFeatures(): HasMany
+    public function packages(): BelongsToMany
     {
-        return $this->hasMany(PackageFeature::class);
+        return $this->belongsToMany(Package::class, 'package_features')
+            ->withTimestamps();
+    }
+
+    public function scopeMain($query)
+    {
+        return $query->whereNull('parent_id');
+    }
+
+    public function scopeSub($query)
+    {
+        return $query->whereNotNull('parent_id');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function isMain(): bool
+    {
+        return is_null($this->parent_id);
+    }
+
+    public function isSub(): bool
+    {
+        return ! is_null($this->parent_id);
     }
 
     /**
-     * Features that this feature depends on (requires).
+     * Hitung total harga fitur dari sub-fiturnya jika ada.
      */
-    public function dependencies(): HasMany
+    public function getCalculatedPriceAttribute(): float
     {
-        return $this->hasMany(FeatureDependency::class, 'feature_id');
+        if ($this->isMain()) {
+            if ($this->relationLoaded('subFeatures') && $this->subFeatures->isNotEmpty()) {
+                return (float) $this->subFeatures->sum('price');
+            }
+
+            if ($this->subFeatures()->exists()) {
+                return (float) $this->subFeatures()->sum('price');
+            }
+        }
+
+        return (float) ($this->attributes['price'] ?? 0);
     }
 
     /**
-     * Features that require this feature.
+     * Sinkronisasi nilai kolom price fitur utama dari total harga sub-fitur.
      */
-    public function dependents(): HasMany
+    public function syncPriceFromSubFeatures(): void
     {
-        return $this->hasMany(FeatureDependency::class, 'required_feature_id');
-    }
-
-    public function requiredFeatures(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            Feature::class,
-            'feature_dependencies',
-            'feature_id',
-            'required_feature_id'
-        );
+        if ($this->isMain() && $this->subFeatures()->exists()) {
+            $this->update(['price' => (float) $this->subFeatures()->sum('price')]);
+        }
     }
 }

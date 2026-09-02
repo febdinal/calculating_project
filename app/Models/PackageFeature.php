@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['package_id', 'feature_id', 'status', 'notes'])]
+#[Fillable(['package_id', 'feature_id'])]
 class PackageFeature extends Model
 {
     use HasFactory;
@@ -20,20 +20,5 @@ class PackageFeature extends Model
     public function feature(): BelongsTo
     {
         return $this->belongsTo(Feature::class);
-    }
-
-    public function isIncluded(): bool
-    {
-        return $this->status === 'included';
-    }
-
-    public function isOptional(): bool
-    {
-        return $this->status === 'optional';
-    }
-
-    public function isNotAvailable(): bool
-    {
-        return $this->status === 'not_available';
     }
 }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'E-Commerce Project Configurator') — Kalkulator Biaya Proyek</title>
+    <title>@yield('title', 'Website Feature Configurator') — Kalkulator Fitur & Estimasi Biaya</title>
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,9 +31,9 @@
                 </div>
                 <div>
                     <span class="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
-                        E-Commerce <span class="text-indigo-400 font-extrabold">Configurator</span>
+                        Website Feature <span class="text-indigo-400 font-extrabold">Configurator</span>
                     </span>
-                    <p class="text-[11px] text-slate-400 font-medium">Kalkulator Biaya & Paket Sewa</p>
+                    <p class="text-[11px] text-slate-400 font-medium">Kalkulator Fitur & Estimasi Biaya</p>
                 </div>
             </a>
 
@@ -55,6 +55,12 @@
                             <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
                             <span>Admin Panel</span>
                         </a>
+                        <form method="POST" action="{{ route('logout') }}" class="inline">
+                            @csrf
+                            <button type="submit" class="px-3 py-2 text-xs font-medium text-slate-400 hover:text-rose-400 transition-colors">
+                                Keluar
+                            </button>
+                        </form>
                     @endif
                 @else
                     <a href="{{ route('login') }}" class="px-3.5 py-2 rounded-xl text-slate-400 hover:text-slate-200 text-xs font-semibold transition-colors">
@@ -81,9 +87,9 @@
     <!-- Footer -->
     <footer class="border-t border-slate-800/80 bg-slate-950 py-8 text-center text-xs text-slate-500">
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p>&copy; {{ date('Y') }} E-Commerce Project Configurator — Model Paket Sewa Layanan Tahunan.</p>
+            <p>&copy; {{ date('Y') }} Website Feature Configurator — Kalkulator Fitur & Estimasi Biaya.</p>
             <div class="flex items-center gap-4 text-slate-400">
-                <span>Infrastruktur Termasuk: Hosting, Domain, SSL & Maintenance</span>
+                <span>Konfigurasi Cepat &bull; Realtime Calculation &bull; Unduh PDF Langsung</span>
             </div>
         </div>
     </footer>

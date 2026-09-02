@@ -1,83 +1,88 @@
 @extends('layouts.admin')
 
-@section('title', 'Manajemen Paket Sewa')
-@section('page-title', 'Paket Sewa (Packages)')
-@section('page-subtitle', 'Kelola paket sewa tahunan e-commerce, harga dasar, target pengguna, dan matriks fitur')
-
-@section('header-actions')
-    <a href="{{ route('admin.packages.create') }}" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-indigo-600/20 flex items-center gap-2 transition-all">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        <span>Tambah Paket Baru</span>
-    </a>
-@endsection
+@section('title', 'Kelola Paket')
+@section('page-title', 'Manajemen Paket Website')
 
 @section('content')
 <div class="space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        @foreach ($packages as $package)
-            <div class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-6 shadow-xl flex flex-col justify-between relative group hover:border-indigo-500/50 transition-all duration-200">
-                <!-- Status Badge -->
-                <div class="flex items-center justify-between mb-4">
-                    <span class="px-2.5 py-1 text-[10px] font-bold uppercase rounded-md {{ $package->status === 'active' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-800 text-slate-400 border border-slate-700' }}">
-                        {{ $package->status }}
-                    </span>
-                    @if ($package->is_featured)
-                        <span class="px-2 py-0.5 text-[10px] font-bold uppercase bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 rounded-md">
-                            Featured
-                        </span>
-                    @endif
-                </div>
+    <div class="flex items-center justify-between">
+        <p class="text-xs text-slate-400">Kelola daftar paket website, harga, periode, dan fitur bawaan.</p>
+        <a href="{{ route('admin.packages.create') }}" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg shadow-indigo-600/30">
+            <span>+ Tambah Paket</span>
+        </a>
+    </div>
 
-                <!-- Package Info -->
-                <div class="space-y-3">
-                    <h2 class="text-xl font-bold text-white tracking-tight">{{ $package->name }}</h2>
-                    <div class="text-2xl font-black text-emerald-400 font-mono">
-                        {{ $package->formatted_price }}
-                        @if (!$package->isCustomPriced())
-                            <span class="text-xs font-normal text-slate-400 font-sans">/ {{ $package->billing_period === 'annual' ? 'tahun' : 'bulan' }}</span>
-                        @endif
-                    </div>
-                    <p class="text-xs text-slate-400 leading-relaxed">{{ $package->description }}</p>
-
-                    @if ($package->target_user)
-                        <div class="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 text-xs text-slate-300">
-                            <span class="font-semibold text-slate-400 block text-[10px] uppercase">Target Pengguna:</span>
-                            {{ $package->target_user }}
-                        </div>
-                    @endif
-
-                    <div class="pt-3 border-t border-slate-800 grid grid-cols-2 gap-2 text-center text-xs">
-                        <div class="p-2 rounded-lg bg-slate-800/40">
-                            <span class="text-slate-400 block text-[10px]">Fitur Termasuk</span>
-                            <span class="text-sm font-bold text-indigo-400">{{ $package->included_count }} Fitur</span>
-                        </div>
-                        <div class="p-2 rounded-lg bg-slate-800/40">
-                            <span class="text-slate-400 block text-[10px]">Total Proyek</span>
-                            <span class="text-sm font-bold text-cyan-400">{{ $package->projects_count }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Actions Button Group -->
-                <div class="pt-5 mt-4 border-t border-slate-800/80 flex flex-col gap-2">
-                    <a href="{{ route('admin.packages.features', $package) }}" class="w-full py-2 px-3 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 hover:border-indigo-500/60 font-semibold rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
-                        <span>Atur Matriks Fitur ({{ $package->included_count }})</span>
-                    </a>
-                    <div class="flex items-center gap-2">
-                        <a href="{{ route('admin.packages.edit', $package) }}" class="flex-1 py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded-lg text-xs text-center transition-colors">
-                            Edit Paket
-                        </a>
-                        <form action="{{ route('admin.packages.toggle-status', $package) }}" method="POST">
-                            @csrf
-                            <button type="submit" class="py-1.5 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition-colors" title="Toggle Status Aktif">
-                                {{ $package->status === 'active' ? 'Nonaktifkan' : 'Aktifkan' }}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        @endforeach
+    <!-- Packages Table -->
+    <div class="rounded-2xl bg-slate-900/60 border border-slate-800 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-800/60 text-slate-400 font-semibold border-b border-slate-800">
+                    <tr>
+                        <th class="py-3.5 px-4">Urutan</th>
+                        <th class="py-3.5 px-4">Nama Paket</th>
+                        <th class="py-3.5 px-4">Harga</th>
+                        <th class="py-3.5 px-4">Periode</th>
+                        <th class="py-3.5 px-4">Fitur Bawaan</th>
+                        <th class="py-3.5 px-4">Status</th>
+                        <th class="py-3.5 px-4 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60">
+                    @forelse ($packages as $package)
+                        <tr class="hover:bg-slate-800/30 transition-colors">
+                            <td class="py-3.5 px-4 font-mono text-slate-400">{{ $package->sort_order }}</td>
+                            <td class="py-3.5 px-4">
+                                <p class="font-bold text-white">{{ $package->name }}</p>
+                                <p class="text-[11px] text-slate-400">{{ Str::limit($package->description, 50) }}</p>
+                            </td>
+                            <td class="py-3.5 px-4 font-semibold text-indigo-400">
+                                Rp {{ number_format($package->price, 0, ',', '.') }}
+                            </td>
+                            <td class="py-3.5 px-4 text-slate-300 capitalize">
+                                {{ $package->period }}
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <a href="{{ route('admin.packages.features', $package) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20 border border-indigo-500/20 font-semibold transition-colors">
+                                    <span>✓</span>
+                                    <span>{{ $package->features_count }} Fitur</span>
+                                </a>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <form method="POST" action="{{ route('admin.packages.toggle-status', $package) }}">
+                                    @csrf
+                                    <button type="submit" class="px-2 py-0.5 rounded-full text-[10px] font-semibold {{ $package->status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-700 text-slate-400' }}">
+                                        {{ $package->status }}
+                                    </button>
+                                </form>
+                            </td>
+                            <td class="py-3.5 px-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a href="{{ route('admin.packages.features', $package) }}" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium" title="Atur Fitur">
+                                        Fitur
+                                    </a>
+                                    <a href="{{ route('admin.packages.edit', $package) }}" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-medium">
+                                        Edit
+                                    </a>
+                                    <form method="POST" action="{{ route('admin.packages.destroy', $package) }}" onsubmit="return confirm('Hapus paket {{ $package->name }}?');" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="px-2.5 py-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 text-[11px] font-medium border border-rose-500/20">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="py-8 text-center text-slate-400">
+                                Belum ada paket. Silakan tambahkan paket baru.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 @endsection

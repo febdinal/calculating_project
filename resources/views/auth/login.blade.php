@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin — E-Commerce Configurator</title>
+    <title>Login Admin — Website Feature Configurator</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,8 +24,8 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                 </svg>
             </div>
-            <h1 class="text-2xl font-bold tracking-tight text-white">E-Commerce Configurator</h1>
-            <p class="text-sm text-slate-400">Masuk ke Panel Administrasi & Pricing Internal</p>
+            <h1 class="text-2xl font-bold tracking-tight text-white">Website Feature Configurator</h1>
+            <p class="text-sm text-slate-400">Masuk ke Panel Administrasi Master Data</p>
         </div>
 
         <!-- Login Card -->
@@ -34,13 +34,6 @@
                 <div class="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm flex items-start gap-2.5">
                     <svg class="w-5 h-5 text-rose-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>{{ $errors->first() }}</span>
-                </div>
-            @endif
-
-            @if (session('info'))
-                <div class="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-sm flex items-start gap-2.5">
-                    <svg class="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>{{ session('info') }}</span>
                 </div>
             @endif
 
@@ -53,7 +46,7 @@
                         <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
                         </div>
-                        <input type="email" id="email" name="email" value="{{ old('email', 'admin@ecomconfig.com') }}" required autofocus
+                        <input type="email" id="email" name="email" value="{{ old('email', 'admin@featureconfig.com') }}" required autofocus
                             class="w-full pl-11 pr-4 py-2.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
                     </div>
                 </div>
@@ -86,22 +79,24 @@
             <!-- Quick Demo Credentials Box -->
             <div class="p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/50 text-xs text-slate-400 space-y-1.5 font-mono">
                 <div class="flex items-center justify-between text-slate-300 font-sans font-semibold">
-                    <span>Kredensial Default:</span>
+                    <span>Kredensial Default Admin:</span>
                     <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">Admin</span>
                 </div>
-                <div class="flex justify-between"><span>Email:</span> <span class="text-indigo-300">admin@ecomconfig.com</span></div>
+                <div class="flex justify-between"><span>Email:</span> <span class="text-indigo-300">admin@featureconfig.com</span></div>
                 <div class="flex justify-between"><span>Password:</span> <span class="text-indigo-300">password</span></div>
             </div>
         </div>
 
-        <p class="text-center text-xs text-slate-500">
-            &copy; {{ date('Y') }} E-Commerce Project Configurator. Hak cipta dilindungi.
-        </p>
+        <div class="text-center">
+            <a href="{{ route('packages.select') }}" class="text-xs text-slate-400 hover:text-white transition-colors">
+                &larr; Kembali ke Halaman Utama
+            </a>
+        </div>
     </div>
 
     <script>
         function fillAdmin() {
-            document.getElementById('email').value = 'admin@ecomconfig.com';
+            document.getElementById('email').value = 'admin@featureconfig.com';
             document.getElementById('password').value = 'password';
         }
     </script>

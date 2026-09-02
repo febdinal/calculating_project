@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'slug', 'description', 'price', 'billing_period', 'target_user', 'price_type', 'is_featured', 'sort_order', 'status'])]
+#[Fillable(['name', 'slug', 'description', 'price', 'period', 'status', 'sort_order'])]
 class Package extends Model
 {
     use HasFactory;
@@ -17,7 +17,6 @@ class Package extends Model
     {
         return [
             'price' => 'decimal:2',
-            'is_featured' => 'boolean',
             'sort_order' => 'integer',
         ];
     }
@@ -25,7 +24,6 @@ class Package extends Model
     public function features(): BelongsToMany
     {
         return $this->belongsToMany(Feature::class, 'package_features')
-            ->withPivot('status', 'notes')
             ->withTimestamps();
     }
 
@@ -34,32 +32,8 @@ class Package extends Model
         return $this->hasMany(PackageFeature::class);
     }
 
-    public function includedFeatures(): BelongsToMany
+    public function scopeActive($query)
     {
-        return $this->features()->wherePivot('status', 'included');
-    }
-
-    public function optionalFeatures(): BelongsToMany
-    {
-        return $this->features()->wherePivot('status', 'optional');
-    }
-
-    public function projects(): HasMany
-    {
-        return $this->hasMany(Project::class);
-    }
-
-    public function isCustomPriced(): bool
-    {
-        return $this->price_type === 'custom';
-    }
-
-    public function getFormattedPriceAttribute(): string
-    {
-        if ($this->isCustomPriced()) {
-            return 'Custom';
-        }
-
-        return 'Rp '.number_format((float) $this->price, 0, ',', '.');
+        return $query->where('status', 'active');
     }
 }

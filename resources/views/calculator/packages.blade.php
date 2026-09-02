@@ -1,188 +1,152 @@
 @extends('layouts.app')
 
-@section('title', 'Pilihan Paket E-Commerce')
+@section('title', 'Pilihan Paket Website')
+
+@push('styles')
+<style>
+    @keyframes shimmerGlow {
+        0%, 100% {
+            background-position: 0% 50%;
+            filter: drop-shadow(0 0 8px rgba(244, 63, 94, 0.5));
+        }
+        50% {
+            background-position: 100% 50%;
+            filter: drop-shadow(0 0 16px rgba(236, 72, 153, 0.85));
+        }
+    }
+
+    .animate-shimmer-glow {
+        background: linear-gradient(90deg, #ec4899, #f43f5e, #fb7185, #f59e0b, #ec4899);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shimmerGlow 3s ease-in-out infinite;
+    }
+</style>
+@endpush
 
 @section('content')
-<div class="py-12 sm:py-16 space-y-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="py-12 md:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <!-- Hero Header -->
-    <div class="text-center max-w-3xl mx-auto space-y-4">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold">
+    <div class="text-center max-w-3xl mx-auto space-y-4 mb-16">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold">
             <span>✨</span>
-            <span>Perencanaan Anggaran Teknis E-Commerce — Model Paket Sewa Tahunan</span>
+            <span>Langkah 1: Pilih Paket Dasar Website</span>
         </div>
-        <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-            Pilih Paket Dasar, <br class="hidden sm:inline">
-            <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Sesuaikan Kebutuhan Fitur Anda</span>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
+            Kalkulator Konfigurasi Fitur & <span class="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Estimasi Biaya</span>
         </h1>
-        <p class="text-sm sm:text-base text-slate-400 leading-relaxed">
-            Aplikasi E-Commerce Project Configurator visual berbasis Kanban. Pilih paket awal yang paling sesuai, lalu tambahkan atau kurangi fitur secara interaktif.
+        <p class="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            Pilih paket dasar website atau mulai dari paket custom. Anda dapat menyesuaikan dan menambahkan fitur secara bebas di langkah berikutnya melalui papan Kanban interaktif.
         </p>
     </div>
 
-    <!-- 4 Package Cards Grid -->
+    <!-- Package Cards Grid (4 Columns) -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
-        @foreach ($packages as $package)
+        @foreach ($packages as $pkg)
             @php
-                $isMedium = $package->slug === 'medium';
-                $isProfessional = $package->slug === 'professional';
-                $isCustom = $package->slug === 'web-custom';
+                $isPopular = ($pkg->slug === 'medium');
+                $isCustom = ($pkg->slug === 'custom');
             @endphp
-            <div class="bg-slate-900/90 border {{ $isMedium ? 'border-indigo-500 ring-2 ring-indigo-500/30 shadow-indigo-500/10' : 'border-slate-800/80' }} rounded-3xl p-6 sm:p-7 shadow-2xl flex flex-col justify-between relative group hover:border-slate-700 transition-all duration-300">
-                @if ($isMedium)
-                    <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[11px] font-bold uppercase tracking-wider rounded-full shadow-lg">
-                        ⭐ Paling Populer (Rekomendasi)
+            <div class="relative rounded-3xl bg-slate-900/70 border {{ $isPopular ? 'border-indigo-500/80 shadow-2xl shadow-indigo-500/20 ring-1 ring-indigo-500/50' : ($isCustom ? 'border-pink-500/30 hover:border-pink-500/60 shadow-lg shadow-pink-500/5' : 'border-slate-800') }} p-6 flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 hover:border-slate-700">
+                @if ($isPopular)
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-md">
+                        Paling Populer
+                    </div>
+                @elseif ($isCustom)
+                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3.5 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-md">
+                        Full Fleksibel
                     </div>
                 @endif
 
-                <div class="space-y-5">
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Paket Sewa</span>
-                            <span class="text-xl">
-                                {{ $package->slug === 'basic' ? '🌱' : ($isMedium ? '🚀' : ($isProfessional ? '👑' : '💎')) }}
-                            </span>
-                        </div>
-                        <h2 class="text-2xl font-black text-white tracking-tight">{{ $package->name }}</h2>
-                        <p class="text-xs text-slate-400 mt-2 min-h-[36px] leading-relaxed">{{ $package->description }}</p>
+                <div>
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <h3 class="text-lg font-bold text-white">{{ $pkg->name }}</h3>
+                        <span class="px-2.5 py-0.5 rounded-lg {{ $isCustom ? 'bg-pink-500/10 text-pink-300 border border-pink-500/20' : 'bg-slate-800 text-slate-300' }} text-[11px] font-semibold">
+                            {{ $pkg->features_count > 0 ? $pkg->features_count . ' Fitur Bawaan' : 'Bebas Pilih' }}
+                        </span>
                     </div>
 
-                    <!-- Price Display -->
-                    <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-                        <div class="text-2xl sm:text-3xl font-black text-white font-mono tracking-tight">
-                            {{ $package->formatted_price }}
-                        </div>
-                        @if (!$package->isCustomPriced())
-                            <span class="text-xs text-slate-400 block mt-0.5">/ tahun (sewa layanan lengkap)</span>
+                    <p class="text-xs text-slate-400 leading-relaxed min-h-[48px] mb-5">
+                        {{ $pkg->description }}
+                    </p>
+
+                    <!-- Price Box (Uniform & Single Line Fit) -->
+                    <div class="p-3.5 rounded-2xl bg-slate-800/40 border border-slate-800/80 mb-5 min-h-[72px] flex flex-col justify-center">
+                        <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Harga Paket Dasar</p>
+                        
+                        @if ($isCustom)
+                            <div class="flex items-center mt-0.5">
+                                <span class="animate-shimmer-glow text-base xl:text-lg font-black tracking-wider uppercase font-mono">
+                                    ✨ AFFORDABLE
+                                </span>
+                            </div>
                         @else
-                            <span class="text-xs text-amber-400 block mt-0.5">Scope & kompleksitas khusus</span>
+                            <div class="flex items-baseline gap-1 mt-0.5 whitespace-nowrap overflow-hidden">
+                                <span class="text-sm xl:text-base font-extrabold text-white font-mono tracking-tight shrink-0">
+                                    Rp {{ number_format($pkg->price, 0, ',', '.') }}
+                                </span>
+                                <span class="text-[10px] xl:text-[11px] text-slate-400 font-medium shrink-0">/ {{ $pkg->period }}</span>
+                            </div>
                         @endif
                     </div>
 
-                    <!-- Target Segment -->
-                    @if ($package->target_user)
-                        <div class="text-xs text-slate-300 space-y-1">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Cocok Untuk:</span>
-                            <p class="text-slate-300 font-medium leading-relaxed">{{ $package->target_user }}</p>
-                        </div>
-                    @endif
-
-                    <!-- Key Feature Highlights -->
-                    <div class="space-y-2 pt-2 border-t border-slate-800 text-xs">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Fitur Inti:</span>
-                        @if ($package->slug === 'basic')
-                            <ul class="space-y-1.5 text-slate-300">
-                                <li class="flex items-center gap-2">✓ <span>Katalog Produk Online</span></li>
-                                <li class="flex items-center gap-2">✓ <span>Pemesanan via WhatsApp</span></li>
-                                <li class="flex items-center gap-2">✓ <span>Website Responsive & Banner</span></li>
-                                <li class="flex items-center gap-2">✓ <span>SEO Dasar & Google Maps</span></li>
-                            </ul>
-                        @elseif ($isMedium)
-                            <ul class="space-y-1.5 text-slate-300">
-                                <li class="flex items-center gap-2">✓ <span>Keranjang Belanja & Checkout</span></li>
-                                <li class="flex items-center gap-2">✓ <span>Payment Gateway Online</span></li>
-                                <li class="flex items-center gap-2">✓ <span>Integrasi Ongkir Ekspedisi</span></li>
-                                <li class="flex items-center gap-2">✓ <span>Akun Pelanggan & Laporan</span></li>
-                            </ul>
-                        @elseif ($isProfessional)
-                            <ul class="space-y-1.5 text-slate-300">
-                                <li class="flex items-center gap-2">✓ <span>Semua Fitur Paket Medium</span></li>
-                                <li class="flex items-center gap-2">✓ <span>Voucher, Wishlist & Review</span></li>
-                                <li class="flex items-center gap-2">✓ <span>Multi-role & Notifikasi WA</span></li>
-                                <li class="flex items-center gap-2">✓ <span>SEO Lanjutan & API Integrasi</span></li>
+                    <!-- Highlighted Features List -->
+                    <div class="space-y-2 mb-6">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            {{ $isCustom ? 'Keunggulan Custom:' : 'Termasuk di Paket:' }}
+                        </p>
+                        
+                        @if ($isCustom || $pkg->features->isEmpty())
+                            <ul class="space-y-2 text-xs text-slate-300">
+                                <li class="flex items-center gap-2">
+                                    <span class="text-pink-400">✓</span>
+                                    <span>Mulai dari nol (Kanvas Kosong)</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-pink-400">✓</span>
+                                    <span>Bebas pilih fitur apa saja</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-pink-400">✓</span>
+                                    <span>Kustomisasi sub-fitur penuh</span>
+                                </li>
+                                <li class="flex items-center gap-2">
+                                    <span class="text-pink-400">✓</span>
+                                    <span>Biaya realtime sesuai pilihan</span>
+                                </li>
                             </ul>
                         @else
-                            <ul class="space-y-1.5 text-slate-300">
-                                <li class="flex items-center gap-2">✓ <span>Full Custom Architecture</span></li>
-                                <li class="flex items-center gap-2">✓ <span>Integrasi Sistem Khusus / ERP</span></li>
-                                <li class="flex items-center gap-2">✓ <span>Skalabilitas Dedicated</span></li>
-                                <li class="flex items-center gap-2">✓ <span>SLA & Support Prioritas</span></li>
+                            <ul class="space-y-2 text-xs text-slate-300">
+                                @foreach ($pkg->features->take(4) as $feat)
+                                    <li class="flex items-center gap-2">
+                                        <span class="text-emerald-400">✓</span>
+                                        <span class="truncate">{{ $feat->name }}</span>
+                                    </li>
+                                @endforeach
+                                @if ($pkg->features->count() > 4)
+                                    <li class="text-[10px] text-indigo-400 font-medium pl-5">
+                                        + {{ $pkg->features->count() - 4 }} fitur lainnya
+                                    </li>
+                                @endif
                             </ul>
                         @endif
                     </div>
                 </div>
 
-                <!-- CTA Button -->
-                <div class="pt-6 mt-6 border-t border-slate-800">
-                    <a href="{{ route('calculator', ['package' => $package->slug]) }}"
-                        class="w-full py-3 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all duration-200 {{ $isMedium ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-600/30' : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 hover:border-slate-600' }}">
-                        <span>Konfigurasikan Paket Ini</span>
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                <div class="pt-2">
+                    <a href="{{ route('calculator', ['package' => $pkg->slug]) }}" class="w-full py-3 px-4 rounded-xl {{ $isPopular ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold shadow-lg shadow-indigo-600/30' : ($isCustom ? 'bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-bold shadow-lg shadow-pink-600/30' : 'bg-slate-800 hover:bg-slate-700 text-white font-semibold') }} text-center text-xs transition-all flex items-center justify-center gap-2 group">
+                        <span>{{ $isCustom ? 'Rancang Paket Custom' : 'Pilih Paket ' . $pkg->name }}</span>
+                        <span class="group-hover:translate-x-0.5 transition-transform">&rarr;</span>
                     </a>
                 </div>
             </div>
         @endforeach
     </div>
 
-    <!-- Included Infrastructure Section -->
-    <div class="bg-gradient-to-br from-slate-900/90 via-slate-900/60 to-slate-950 border border-slate-800/80 rounded-3xl p-6 sm:p-10 shadow-2xl">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-            <div class="max-w-xl space-y-3">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
-                    <span>🛡️</span>
-                    <span>Sudah Termasuk Dalam Semua Paket</span>
-                </div>
-                <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                    Infrastruktur & Pemeliharaan Teknis
-                </h2>
-                <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
-                    Setiap paket sewa tahunan sudah memperhitungkan kebutuhan infrastruktur dasar tanpa biaya tambahan tersembunyi.
-                </p>
-            </div>
-
-            <!-- 5 Infrastructure Pillars -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-1">
-                    <div class="text-lg">🖥️</div>
-                    <div class="font-bold text-white">Hosting / VPS</div>
-                    <div class="text-[11px] text-slate-400">Server handal & uptime tinggi</div>
-                </div>
-
-                <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-1">
-                    <div class="text-lg">🌐</div>
-                    <div class="font-bold text-white">Domain Website</div>
-                    <div class="text-[11px] text-slate-400">Registrasi & perpanjangan</div>
-                </div>
-
-                <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-1">
-                    <div class="text-lg">🔒</div>
-                    <div class="font-bold text-white">SSL / HTTPS</div>
-                    <div class="text-[11px] text-slate-400">Keamanan enkripsi data</div>
-                </div>
-
-                <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-1">
-                    <div class="text-lg">💾</div>
-                    <div class="font-bold text-white">Backup Otomatis</div>
-                    <div class="text-[11px] text-slate-400">Pencadangan data berkala</div>
-                </div>
-
-                <div class="p-3.5 rounded-2xl bg-slate-800/60 border border-slate-700/60 space-y-1 sm:col-span-2">
-                    <div class="text-lg">🔧</div>
-                    <div class="font-bold text-white">Maintenance Teknis</div>
-                    <div class="text-[11px] text-slate-400">Update patch keamanan & troubleshooting operasional</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add-ons Showcase -->
-    <div class="space-y-6">
-        <div class="text-center max-w-2xl mx-auto space-y-2">
-            <h2 class="text-2xl font-bold text-white tracking-tight">Kebutuhan Add-on & Pengembangan Khusus</h2>
-            <p class="text-xs text-slate-400">Dapat ditambahkan ke paket mana pun secara fleksibel melalui papan Kanban.</p>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            @foreach ($addons as $addon)
-                <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 hover:border-indigo-500/40 transition-colors space-y-2">
-                    <div class="text-2xl">{{ $addon->icon ?? '🧩' }}</div>
-                    <h3 class="font-bold text-sm text-white">{{ $addon->name }}</h3>
-                    <p class="text-[11px] text-slate-400 line-clamp-2">{{ $addon->description }}</p>
-                    <div class="pt-2 text-xs font-mono font-semibold text-emerald-400">
-                        {{ $addon->formatted_price }}
-                    </div>
-                </div>
-            @endforeach
-        </div>
+    <!-- Simple Information Note -->
+    <div class="mt-16 text-center text-xs text-slate-400 max-w-xl mx-auto">
+        💡 <span class="font-semibold text-slate-300">Fleksibel & Transparan:</span> Anda dapat menambah atau mengurangi fitur pada papan Kanban di halaman berikutnya untuk melihat total kalkulasi secara realtime.
     </div>
 </div>
 @endsection
