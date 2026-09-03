@@ -318,11 +318,14 @@ class FeatureSeeder extends Seeder
             $category = Category::where('slug', $data['category_slug'])->first();
             $categoryId = $category?->id;
 
-            // Hitung total harga fitur utama dari total harga sub-fitur
+            // Hitung total harga dan total harga real fitur utama dari total harga sub-fitur
             $totalFeaturePrice = 0;
+            $totalFeatureRealPrice = 0;
             if (! empty($data['sub_features'])) {
                 foreach ($data['sub_features'] as $subItem) {
                     $totalFeaturePrice += $subItem['price'];
+                    $subRealPrice = $subItem['real_price'] ?? round($subItem['price'] * 0.60);
+                    $totalFeatureRealPrice += $subRealPrice;
                 }
             }
 
@@ -335,15 +338,17 @@ class FeatureSeeder extends Seeder
                     'description' => $data['description'],
                     'icon' => $data['icon'],
                     'price' => $totalFeaturePrice,
+                    'real_price' => $totalFeatureRealPrice,
                     'sort_order' => $data['sort_order'],
                     'status' => 'active',
                 ]
             );
 
-            // Create or update sub features with their own prices
+            // Create or update sub features with their own prices and real prices
             if (! empty($data['sub_features'])) {
                 foreach ($data['sub_features'] as $index => $subItem) {
                     $subSlug = Str::slug($mainFeature->slug.'-'.$subItem['name']);
+                    $subRealPrice = $subItem['real_price'] ?? round($subItem['price'] * 0.60);
                     Feature::updateOrCreate(
                         ['slug' => $subSlug],
                         [
@@ -353,6 +358,7 @@ class FeatureSeeder extends Seeder
                             'description' => null,
                             'icon' => null,
                             'price' => $subItem['price'],
+                            'real_price' => $subRealPrice,
                             'sort_order' => $index + 1,
                             'status' => 'active',
                         ]

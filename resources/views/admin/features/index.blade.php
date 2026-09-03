@@ -17,6 +17,53 @@
         </div>
     </div>
 
+    <!-- Financial & Margin Summary Cards (Internal) -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-2xl tally-card bg-white dark:bg-[#0d121f] border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 font-mono">Total Nilai Jual Master Fitur</p>
+                <p class="text-xl font-bold text-indigo-600 dark:text-indigo-400 mt-1 font-mono">
+                    Rp {{ number_format($totalSellingPrice, 0, ',', '.') }}
+                </p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800/60 flex items-center justify-center text-lg">
+                🏷️
+            </div>
+        </div>
+
+        <div class="p-4 rounded-2xl tally-card bg-white dark:bg-[#0d121f] border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
+            <div>
+                <div class="flex items-center gap-1.5">
+                    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 font-mono">Total Modal Real (Internal)</p>
+                    <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono font-bold">INTERNAL</span>
+                </div>
+                <p class="text-xl font-bold text-amber-600 dark:text-amber-400 mt-1 font-mono">
+                    Rp {{ number_format($totalRealPrice, 0, ',', '.') }}
+                </p>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800/60 flex items-center justify-center text-lg">
+                🔒
+            </div>
+        </div>
+
+        <div class="p-4 rounded-2xl tally-card bg-white dark:bg-[#0d121f] border border-slate-200/80 dark:border-slate-800 shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 font-mono">Total Margin Profit (Rata-rata)</p>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <p class="text-xl font-bold font-mono {{ $totalMarginNominal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                        {{ $totalMarginNominal >= 0 ? '+' : '' }}Rp {{ number_format($totalMarginNominal, 0, ',', '.') }}
+                    </p>
+                    <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full {{ $totalMarginPercent >= 0 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border border-rose-200 dark:border-rose-800/60' }}">
+                        {{ $totalMarginPercent }}%
+                    </span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 flex items-center justify-center text-lg">
+                📈
+            </div>
+        </div>
+    </div>
+
     <!-- Filter Bar -->
     <div class="p-4 rounded-2xl tally-card flex flex-wrap items-center gap-3 bg-white dark:bg-[#0d121f] border border-slate-200/80 dark:border-slate-800 shadow-xs">
         <form method="GET" action="{{ route('admin.features.index') }}" class="flex flex-wrap items-center gap-3 w-full">
@@ -56,15 +103,24 @@
                         <th class="py-3.5 px-4 w-12 text-center">No</th>
                         <th class="py-3.5 px-4">Ikon & Nama Fitur</th>
                         <th class="py-3.5 px-4">Kategori</th>
-                        <th class="py-3.5 px-4">Harga Fitur</th>
-                        <th class="py-3.5 px-4">Sub Fitur</th>
+                        <th class="py-3.5 px-4">Harga Jual (Klien)</th>
+                        <th class="py-3.5 px-4">Harga Real (Internal)</th>
+                        <th class="py-3.5 px-4">Margin Profit</th>
+                        <th class="py-3.5 px-4 text-center">Sub Fitur</th>
                         <th class="py-3.5 px-4">Status</th>
                         <th class="py-3.5 px-4 text-right">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80">
                     @forelse ($features as $feature)
-                        <tr class="hover:bg-indigo-50/30 dark:hover:bg-slate-800/40 transition-colors">
+                        @php
+                            $isProfit = $feature->margin >= 0;
+                            $marginClass = $isProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
+                            $marginBadgeClass = $isProfit
+                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60'
+                                : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border-rose-200 dark:border-rose-800/60';
+                        @endphp
+                        <tr class="hover:bg-indigo-50/20 dark:hover:bg-slate-800/40 transition-colors">
                             <td class="py-3.5 px-4 text-center font-mono text-slate-400 dark:text-slate-500 font-medium">{{ $feature->sort_order }}</td>
                             <td class="py-3.5 px-4">
                                 <div class="flex items-start gap-3">
@@ -80,14 +136,30 @@
                                     {{ $feature->category?->name ?? 'Lainnya' }}
                                 </span>
                             </td>
-                            <td class="py-3.5 px-4 font-bold text-indigo-600 dark:text-indigo-400 font-mono text-xs">
-                                Rp {{ number_format($feature->price, 0, ',', '.') }}
+                            <td class="py-3.5 px-4 font-bold text-indigo-600 dark:text-indigo-400 font-mono text-xs whitespace-nowrap">
+                                Rp {{ number_format($feature->calculated_price, 0, ',', '.') }}
                             </td>
-                            <td class="py-3.5 px-4">
-                                @if ($feature->sub_features_count > 0)
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold font-mono bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60 shadow-xs">
-                                        {{ $feature->sub_features_count }} Sub Fitur
+                            <td class="py-3.5 px-4 font-bold text-amber-600 dark:text-amber-400 font-mono text-xs whitespace-nowrap">
+                                Rp {{ number_format($feature->calculated_real_price, 0, ',', '.') }}
+                            </td>
+                            <td class="py-3.5 px-4 font-mono whitespace-nowrap">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-bold {{ $marginClass }} text-xs">
+                                        {{ $isProfit ? '+' : '' }}Rp {{ number_format($feature->margin, 0, ',', '.') }}
                                     </span>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $marginBadgeClass }}">
+                                        {{ $feature->margin_percentage }}%
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-4 text-center">
+                                @if ($feature->sub_features_count > 0)
+                                    <button type="button" onclick="toggleSubRows('sub-detail-{{ $feature->id }}', this)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold font-mono bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-300 dark:hover:bg-indigo-900 border border-indigo-200 dark:border-indigo-800/60 shadow-xs transition-colors">
+                                        <span>{{ $feature->sub_features_count }} Sub Fitur</span>
+                                        <svg class="w-3.5 h-3.5 transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                        </svg>
+                                    </button>
                                 @else
                                     <span class="text-slate-400 dark:text-slate-600 text-xs font-mono">—</span>
                                 @endif
@@ -120,9 +192,70 @@
                                 </div>
                             </td>
                         </tr>
+
+                        <!-- Collapsible Sub-Features Detailed Breakdown Row -->
+                        @if ($feature->subFeatures->isNotEmpty())
+                            <tr id="sub-detail-{{ $feature->id }}" class="hidden bg-slate-50/70 dark:bg-slate-900/50">
+                                <td colspan="9" class="p-4 pl-12">
+                                    <div class="p-4 rounded-xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+                                        <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 text-xs font-mono">
+                                            <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                                                <span>📑</span>
+                                                <span>Rincian Sub Fitur: {{ $feature->name }}</span>
+                                            </span>
+                                            <span class="text-[11px] text-slate-400">Total {{ $feature->subFeatures->count() }} sub-fitur</span>
+                                        </div>
+
+                                        <div class="overflow-x-auto">
+                                            <table class="w-full text-left text-xs">
+                                                <thead class="text-slate-400 font-mono text-[10px] uppercase border-b border-slate-100 dark:border-slate-800">
+                                                    <tr>
+                                                        <th class="py-2 px-3">Nama Sub Fitur</th>
+                                                        <th class="py-2 px-3">Harga Real (Modal)</th>
+                                                        <th class="py-2 px-3">Harga Jual (Klien)</th>
+                                                        <th class="py-2 px-3">Margin Nominal</th>
+                                                        <th class="py-2 px-3">Margin %</th>
+                                                        <th class="py-2 px-3 text-center">Urutan</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-slate-100 dark:divide-slate-800/60 font-mono text-[11px]">
+                                                    @foreach ($feature->subFeatures as $sub)
+                                                        @php
+                                                            $subProfit = $sub->margin >= 0;
+                                                        @endphp
+                                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                                                            <td class="py-2 px-3 font-sans font-medium text-slate-800 dark:text-slate-200">
+                                                                {{ $sub->name }}
+                                                            </td>
+                                                            <td class="py-2 px-3 text-amber-600 dark:text-amber-400 font-bold">
+                                                                Rp {{ number_format($sub->real_price, 0, ',', '.') }}
+                                                            </td>
+                                                            <td class="py-2 px-3 text-indigo-600 dark:text-indigo-400 font-bold">
+                                                                Rp {{ number_format($sub->price, 0, ',', '.') }}
+                                                            </td>
+                                                            <td class="py-2 px-3 font-bold {{ $subProfit ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
+                                                                {{ $subProfit ? '+' : '' }}Rp {{ number_format($sub->margin, 0, ',', '.') }}
+                                                            </td>
+                                                            <td class="py-2 px-3">
+                                                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border {{ $subProfit ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400 border-emerald-200' : 'bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400 border-rose-200' }}">
+                                                                    {{ $sub->margin_percentage }}%
+                                                                </span>
+                                                            </td>
+                                                            <td class="py-2 px-3 text-center text-slate-400">
+                                                                {{ $sub->sort_order }}
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
                     @empty
                         <tr>
-                            <td colspan="7" class="py-8 text-center text-slate-500 dark:text-slate-400 font-mono">
+                            <td colspan="9" class="py-8 text-center text-slate-500 dark:text-slate-400 font-mono">
                                 Belum ada fitur yang cocok dengan kriteria pencarian.
                             </td>
                         </tr>
@@ -138,4 +271,22 @@
         @endif
     </div>
 </div>
+
+<script>
+    function toggleSubRows(targetId, btn) {
+        const row = document.getElementById(targetId);
+        if (!row) return;
+
+        const isHidden = row.classList.contains('hidden');
+        const icon = btn.querySelector('svg');
+
+        if (isHidden) {
+            row.classList.remove('hidden');
+            if (icon) icon.classList.add('rotate-180');
+        } else {
+            row.classList.add('hidden');
+            if (icon) icon.classList.remove('rotate-180');
+        }
+    }
+</script>
 @endsection

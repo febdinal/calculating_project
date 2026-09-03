@@ -199,4 +199,123 @@ class AdminMasterDataTest extends TestCase
         $this->assertNotNull($sub1);
         $this->assertEquals(1500000, (float) $sub1->price);
     }
+
+    public function test_admin_can_create_feature_with_sub_features_real_price_and_margins(): void
+    {
+        $category = Category::create([
+            'name' => 'Analytics',
+            'slug' => 'analytics',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->post(route('admin.features.store'), [
+            'category_id' => $category->id,
+            'name' => 'Dashboard Pelaporan',
+            'slug' => 'dashboard-pelaporan',
+            'status' => 'active',
+            'sub_features' => [
+                ['name' => 'Laporan Harian', 'real_price' => 'Rp 600.000', 'price' => 'Rp 1.000.000', 'sort_order' => 1],
+                ['name' => 'Export PDF', 'real_price' => 'Rp 400.000', 'price' => 'Rp 1.000.000', 'sort_order' => 2],
+            ],
+        ]);
+
+        $response->assertRedirect(route('admin.features.index'));
+
+        // Parent feature should have auto-synced total price and total real_price
+        $mainFeature = Feature::where('slug', 'dashboard-pelaporan')->first();
+        $this->assertNotNull($mainFeature);
+        $this->assertEquals(2000000, (float) $mainFeature->price);
+        $this->assertEquals(1000000, (float) $mainFeature->real_price);
+        $this->assertEquals(1000000, (float) $mainFeature->margin);
+        $this->assertEquals(50.0, (float) $mainFeature->margin_percentage);
+
+        // Sub feature check
+        $sub1 = Feature::where('name', 'Laporan Harian')->first();
+        $this->assertNotNull($sub1);
+        $this->assertEquals(1000000, (float) $sub1->price);
+        $this->assertEquals(600000, (float) $sub1->real_price);
+        $this->assertEquals(400000, (float) $sub1->margin);
+        $this->assertEquals(40.0, (float) $sub1->margin_percentage);
+    }
+
+    public function test_admin_features_index_displays_real_price_and_margin(): void
+    {
+        $category = Category::create([
+            'name' => 'Security',
+            'slug' => 'security',
+            'status' => 'active',
+        ]);
+
+        $feature = Feature::create([
+            'category_id' => $category->id,
+            'name' => 'SSL Certificate',
+            'slug' => 'ssl-cert',
+            'price' => 500000,
+            'real_price' => 200000,
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->get(route('admin.features.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Harga Real (Internal)');
+        $response->assertSee('Margin Profit');
+        $response->assertSee('Total Modal Real (Internal)');
+        $response->assertSee('Rp 200.000');
+        $response->assertSee('Rp 500.000');
+        $response->assertSee('60%');
+    }
+
+    public function test_admin_can_update_feature_and_sub_features_real_price(): void
+    {
+        $category = Category::create([
+            'name' => 'SEO',
+            'slug' => 'seo',
+            'status' => 'active',
+        ]);
+
+        $feature = Feature::create([
+            'category_id' => $category->id,
+            'name' => 'SEO Suite',
+            'slug' => 'seo-suite',
+            'price' => 1000000,
+            'real_price' => 600000,
+            'status' => 'active',
+        ]);
+
+        $sub = Feature::create([
+            'category_id' => $category->id,
+            'parent_id' => $feature->id,
+            'name' => 'Sitemap Generator',
+            'slug' => 'sitemap-gen',
+            'price' => 1000000,
+            'real_price' => 600000,
+            'sort_order' => 1,
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($this->adminUser)->put(route('admin.features.update', $feature), [
+            'name' => 'SEO Suite Updated',
+            'slug' => 'seo-suite',
+            'category_id' => $category->id,
+            'status' => 'active',
+            'sub_features' => [
+                [
+                    'id' => $sub->id,
+                    'name' => 'Sitemap Generator Pro',
+                    'price' => 'Rp 1.500.000',
+                    'real_price' => 'Rp 700.000',
+                    'sort_order' => 1,
+                ],
+            ],
+        ]);
+
+        $response->assertRedirect(route('admin.features.index'));
+
+        $feature->refresh();
+        $this->assertEquals(1500000, (float) $feature->price);
+        $this->assertEquals(700000, (float) $feature->real_price);
+        $this->assertEquals(800000, (float) $feature->margin);
+        $this->assertEquals(53.3, (float) $feature->margin_percentage);
+    }
 }

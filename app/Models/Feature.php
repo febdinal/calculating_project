@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['category_id', 'parent_id', 'name', 'slug', 'description', 'icon', 'price', 'sort_order', 'status'])]
+#[Fillable(['category_id', 'parent_id', 'name', 'slug', 'description', 'icon', 'price', 'real_price', 'sort_order', 'status'])]
 class Feature extends Model
 {
     use HasFactory;
@@ -18,6 +18,7 @@ class Feature extends Model
     {
         return [
             'price' => 'decimal:2',
+            'real_price' => 'decimal:2',
             'sort_order' => 'integer',
         ];
     }
@@ -87,12 +88,55 @@ class Feature extends Model
     }
 
     /**
-     * Sinkronisasi nilai kolom price fitur utama dari total harga sub-fitur.
+     * Hitung total harga real (internal/modal) fitur dari sub-fiturnya jika ada.
+     */
+    public function getCalculatedRealPriceAttribute(): float
+    {
+        if ($this->isMain()) {
+            if ($this->relationLoaded('subFeatures') && $this->subFeatures->isNotEmpty()) {
+                return (float) $this->subFeatures->sum('real_price');
+            }
+
+            if ($this->subFeatures()->exists()) {
+                return (float) $this->subFeatures()->sum('real_price');
+            }
+        }
+
+        return (float) ($this->attributes['real_price'] ?? 0);
+    }
+
+    /**
+     * Hitung margin nominal (Harga Jual - Harga Real).
+     */
+    public function getMarginAttribute(): float
+    {
+        return (float) ($this->calculated_price - $this->calculated_real_price);
+    }
+
+    /**
+     * Hitung persentase margin keuntungan ((Harga Jual - Harga Real) / Harga Jual * 100).
+     */
+    public function getMarginPercentageAttribute(): float
+    {
+        $calculatedPrice = $this->calculated_price;
+
+        if ($calculatedPrice <= 0) {
+            return 0.0;
+        }
+
+        return round(($this->margin / $calculatedPrice) * 100, 1);
+    }
+
+    /**
+     * Sinkronisasi nilai kolom price dan real_price fitur utama dari total harga sub-fitur.
      */
     public function syncPriceFromSubFeatures(): void
     {
         if ($this->isMain() && $this->subFeatures()->exists()) {
-            $this->update(['price' => (float) $this->subFeatures()->sum('price')]);
+            $this->update([
+                'price' => (float) $this->subFeatures()->sum('price'),
+                'real_price' => (float) $this->subFeatures()->sum('real_price'),
+            ]);
         }
     }
 }

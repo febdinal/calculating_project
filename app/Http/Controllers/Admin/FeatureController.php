@@ -42,7 +42,21 @@ class FeatureController extends Controller
 
         $categories = Category::where('status', 'active')->orderBy('sort_order')->get();
 
-        return view('admin.features.index', compact('features', 'categories'));
+        // Hitung ringkasan finansial internal (Harga Jual, Modal/Real, Margin)
+        $allFeaturesForStats = Feature::whereNull('parent_id')->with('subFeatures')->get();
+        $totalSellingPrice = $allFeaturesForStats->sum(fn ($f) => $f->calculated_price);
+        $totalRealPrice = $allFeaturesForStats->sum(fn ($f) => $f->calculated_real_price);
+        $totalMarginNominal = $totalSellingPrice - $totalRealPrice;
+        $totalMarginPercent = $totalSellingPrice > 0 ? round(($totalMarginNominal / $totalSellingPrice) * 100, 1) : 0;
+
+        return view('admin.features.index', compact(
+            'features',
+            'categories',
+            'totalSellingPrice',
+            'totalRealPrice',
+            'totalMarginNominal',
+            'totalMarginPercent'
+        ));
     }
 
     /**
@@ -67,12 +81,21 @@ class FeatureController extends Controller
             $request->merge(['price' => $cleanPrice === '' ? 0 : (float) $cleanPrice]);
         }
 
+        if ($request->has('real_price')) {
+            $cleanRealPrice = preg_replace('/[^0-9]/', '', (string) $request->input('real_price'));
+            $request->merge(['real_price' => $cleanRealPrice === '' ? 0 : (float) $cleanRealPrice]);
+        }
+
         if ($request->has('sub_features') && is_array($request->input('sub_features'))) {
             $subs = $request->input('sub_features');
             foreach ($subs as $k => $sub) {
                 if (isset($sub['price'])) {
                     $cleanSubPrice = preg_replace('/[^0-9]/', '', (string) $sub['price']);
                     $subs[$k]['price'] = $cleanSubPrice === '' ? 0 : (float) $cleanSubPrice;
+                }
+                if (isset($sub['real_price'])) {
+                    $cleanSubRealPrice = preg_replace('/[^0-9]/', '', (string) $sub['real_price']);
+                    $subs[$k]['real_price'] = $cleanSubRealPrice === '' ? 0 : (float) $cleanSubRealPrice;
                 }
             }
             $request->merge(['sub_features' => $subs]);
@@ -86,11 +109,13 @@ class FeatureController extends Controller
             'description' => ['nullable', 'string'],
             'icon' => ['nullable', 'string', 'max:50'],
             'price' => ['nullable', 'numeric', 'min:0'],
+            'real_price' => ['nullable', 'numeric', 'min:0'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive'],
             'sub_features' => ['nullable', 'array'],
             'sub_features.*.name' => ['required_with:sub_features', 'string', 'max:255'],
             'sub_features.*.price' => ['nullable', 'numeric', 'min:0'],
+            'sub_features.*.real_price' => ['nullable', 'numeric', 'min:0'],
             'sub_features.*.sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
 
@@ -113,6 +138,7 @@ class FeatureController extends Controller
         }
 
         $validated['price'] = $validated['price'] ?? 0;
+        $validated['real_price'] = $validated['real_price'] ?? 0;
         $validated['sort_order'] = $validated['sort_order'] ?? (Feature::where('category_id', $validated['category_id'])->max('sort_order') + 1);
 
         $feature = Feature::create($validated);
@@ -120,10 +146,13 @@ class FeatureController extends Controller
         // Jika fitur utama memiliki sub-fitur dinamis
         if (empty($validated['parent_id']) && ! empty($request->input('sub_features'))) {
             $totalSubPrice = 0;
+            $totalSubRealPrice = 0;
             foreach ($request->input('sub_features') as $index => $subData) {
                 if (! empty($subData['name'])) {
                     $subPrice = isset($subData['price']) && $subData['price'] !== '' ? (float) $subData['price'] : 0;
+                    $subRealPrice = isset($subData['real_price']) && $subData['real_price'] !== '' ? (float) $subData['real_price'] : 0;
                     $totalSubPrice += $subPrice;
+                    $totalSubRealPrice += $subRealPrice;
 
                     Feature::create([
                         'category_id' => $feature->category_id,
@@ -131,15 +160,19 @@ class FeatureController extends Controller
                         'name' => $subData['name'],
                         'slug' => Str::slug($feature->slug.'-'.$subData['name'].'-'.uniqid()),
                         'price' => $subPrice,
+                        'real_price' => $subRealPrice,
                         'sort_order' => $subData['sort_order'] ?? ($index + 1),
                         'status' => 'active',
                     ]);
                 }
             }
 
-            // Update harga fitur utama dari total harga sub-fitur
-            if ($totalSubPrice > 0) {
-                $feature->update(['price' => $totalSubPrice]);
+            // Update harga fitur utama dari total harga dan harga real sub-fitur
+            if ($totalSubPrice > 0 || $totalSubRealPrice > 0) {
+                $feature->update([
+                    'price' => $totalSubPrice,
+                    'real_price' => $totalSubRealPrice,
+                ]);
             }
         } elseif (! empty($validated['parent_id'])) {
             // Jika ini adalah penambahan sub-fitur langsung, update harga parent
@@ -177,12 +210,21 @@ class FeatureController extends Controller
             $request->merge(['price' => $cleanPrice === '' ? 0 : (float) $cleanPrice]);
         }
 
+        if ($request->has('real_price')) {
+            $cleanRealPrice = preg_replace('/[^0-9]/', '', (string) $request->input('real_price'));
+            $request->merge(['real_price' => $cleanRealPrice === '' ? 0 : (float) $cleanRealPrice]);
+        }
+
         if ($request->has('sub_features') && is_array($request->input('sub_features'))) {
             $subs = $request->input('sub_features');
             foreach ($subs as $k => $sub) {
                 if (isset($sub['price'])) {
                     $cleanSubPrice = preg_replace('/[^0-9]/', '', (string) $sub['price']);
                     $subs[$k]['price'] = $cleanSubPrice === '' ? 0 : (float) $cleanSubPrice;
+                }
+                if (isset($sub['real_price'])) {
+                    $cleanSubRealPrice = preg_replace('/[^0-9]/', '', (string) $sub['real_price']);
+                    $subs[$k]['real_price'] = $cleanSubRealPrice === '' ? 0 : (float) $cleanSubRealPrice;
                 }
             }
             $request->merge(['sub_features' => $subs]);
@@ -196,11 +238,13 @@ class FeatureController extends Controller
             'description' => ['nullable', 'string'],
             'icon' => ['nullable', 'string', 'max:50'],
             'price' => ['nullable', 'numeric', 'min:0'],
+            'real_price' => ['nullable', 'numeric', 'min:0'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'status' => ['required', 'in:active,inactive'],
         ]);
 
         $validated['price'] = $validated['price'] ?? 0;
+        $validated['real_price'] = $validated['real_price'] ?? 0;
         $feature->update($validated);
 
         // Simpan / update sub-fitur beserta harga masing-masing
@@ -208,11 +252,14 @@ class FeatureController extends Controller
             $subItems = $request->input('sub_features', []);
             $keepIds = [];
             $totalSubPrice = 0;
+            $totalSubRealPrice = 0;
 
             foreach ($subItems as $subData) {
                 if (! empty($subData['name'])) {
                     $subPrice = isset($subData['price']) && $subData['price'] !== '' ? (float) $subData['price'] : 0;
+                    $subRealPrice = isset($subData['real_price']) && $subData['real_price'] !== '' ? (float) $subData['real_price'] : 0;
                     $totalSubPrice += $subPrice;
+                    $totalSubRealPrice += $subRealPrice;
 
                     if (! empty($subData['id'])) {
                         $sub = Feature::find($subData['id']);
@@ -220,6 +267,7 @@ class FeatureController extends Controller
                             $sub->update([
                                 'name' => $subData['name'],
                                 'price' => $subPrice,
+                                'real_price' => $subRealPrice,
                                 'sort_order' => $subData['sort_order'] ?? 0,
                             ]);
                             $keepIds[] = $sub->id;
@@ -231,6 +279,7 @@ class FeatureController extends Controller
                             'name' => $subData['name'],
                             'slug' => Str::slug($feature->slug.'-'.$subData['name'].'-'.uniqid()),
                             'price' => $subPrice,
+                            'real_price' => $subRealPrice,
                             'sort_order' => $subData['sort_order'] ?? 0,
                             'status' => 'active',
                         ]);
@@ -242,9 +291,12 @@ class FeatureController extends Controller
             // Hapus sub-fitur yang tidak ada dalam daftar
             $feature->subFeatures()->whereNotIn('id', $keepIds)->delete();
 
-            // Auto-sync harga fitur utama dari total harga sub-fitur
+            // Auto-sync harga dan harga real fitur utama dari total harga sub-fitur
             if (count($keepIds) > 0) {
-                $feature->update(['price' => $totalSubPrice]);
+                $feature->update([
+                    'price' => $totalSubPrice,
+                    'real_price' => $totalSubRealPrice,
+                ]);
             }
         } elseif ($feature->isSub() && $feature->parent) {
             $feature->parent->syncPriceFromSubFeatures();

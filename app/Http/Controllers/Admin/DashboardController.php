@@ -24,6 +24,13 @@ class DashboardController extends Controller
         $categories = Category::withCount('mainFeatures')->orderBy('sort_order')->get();
         $recentFeatures = Feature::whereNull('parent_id')->with(['category', 'subFeatures'])->latest()->take(6)->get();
 
+        // Financial & Margin metrics (Internal)
+        $allFeatures = Feature::whereNull('parent_id')->with('subFeatures')->get();
+        $totalSellingPrice = $allFeatures->sum(fn ($f) => $f->calculated_price);
+        $totalRealPrice = $allFeatures->sum(fn ($f) => $f->calculated_real_price);
+        $totalMarginNominal = $totalSellingPrice - $totalRealPrice;
+        $totalMarginPercent = $totalSellingPrice > 0 ? round(($totalMarginNominal / $totalSellingPrice) * 100, 1) : 0;
+
         return view('admin.dashboard', compact(
             'totalPackages',
             'totalCategories',
@@ -31,7 +38,11 @@ class DashboardController extends Controller
             'totalSubFeatures',
             'packages',
             'categories',
-            'recentFeatures'
+            'recentFeatures',
+            'totalSellingPrice',
+            'totalRealPrice',
+            'totalMarginNominal',
+            'totalMarginPercent'
         ));
     }
 }
