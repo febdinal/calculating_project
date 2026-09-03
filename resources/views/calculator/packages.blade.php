@@ -83,7 +83,7 @@
                         @else
                             <div class="flex items-baseline gap-1 mt-0.5 whitespace-nowrap overflow-hidden">
                                 <span class="text-sm xl:text-base font-bold text-[var(--tally-ink-0)] font-mono tracking-tight shrink-0">
-                                    Rp {{ number_format($pkg->price, 0, ',', '.') }}
+                                    Rp {{ number_format($pkg->calculated_price, 0, ',', '.') }}
                                 </span>
                                 <span class="text-[10px] xl:text-[11px] text-[var(--tally-ink-2)] font-mono shrink-0">/ {{ $pkg->period }}</span>
                             </div>

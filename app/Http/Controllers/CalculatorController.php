@@ -25,6 +25,7 @@ class CalculatorController extends Controller
     public function packages(): View
     {
         $packages = Package::where('status', 'active')
+            ->with(['features.subFeatures'])
             ->withCount('features')
             ->orderBy('sort_order')
             ->get();
@@ -53,7 +54,10 @@ class CalculatorController extends Controller
             ?? Package::where('status', 'active')->first()
             ?? Package::firstOrFail();
 
-        $allPackages = Package::where('status', 'active')->orderBy('sort_order')->get();
+        $allPackages = Package::where('status', 'active')
+            ->with(['features.subFeatures'])
+            ->orderBy('sort_order')
+            ->get();
 
         $categories = Category::where('status', 'active')
             ->orderBy('sort_order')
@@ -73,6 +77,15 @@ class CalculatorController extends Controller
 
         // ID fitur yang sudah termasuk dalam paket yang dipilih
         $includedFeatureIds = $selectedPackage->features()->pluck('features.id')->all();
+
+        // Hitung harga dasar paket dari penjumlahan fitur bawaan paket
+        $packageBasePrice = $selectedPackage->slug === 'custom'
+            ? 0.0
+            : (float) $features->whereIn('id', $includedFeatureIds)->sum(function ($feature) {
+                return $feature->subFeatures->isNotEmpty()
+                    ? (float) $feature->subFeatures->sum('price')
+                    : (float) ($feature->price ?? 0);
+            });
 
         // Format data fitur untuk frontend Kanban (harga fitur dihitung dari total harga sub-fitur)
         $featuresData = $features->map(function ($feature) use ($includedFeatureIds) {
@@ -105,6 +118,7 @@ class CalculatorController extends Controller
 
         return view('calculator.index', compact(
             'selectedPackage',
+            'packageBasePrice',
             'allPackages',
             'categories',
             'featuresData',
@@ -134,7 +148,7 @@ class CalculatorController extends Controller
         return response()->json([
             'package_id' => $package->id,
             'package_name' => $package->name,
-            'package_price' => (float) $package->price,
+            'package_price' => (float) $result['package_price'],
             'included_deduction' => (float) $result['included_deduction'],
             'adjusted_package_price' => (float) $result['adjusted_package_price'],
             'period' => $package->period,

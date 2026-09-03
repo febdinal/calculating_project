@@ -211,7 +211,7 @@
                 <td style="width: 25%; font-weight: bold; color: #475569;">Paket Pilihan</td>
                 <td style="width: 35%; font-weight: bold; color: #0f172a;">: Paket {{ $package->name }}</td>
                 <td style="width: 20%; font-weight: bold; color: #475569;">Harga Paket Dasar</td>
-                <td style="width: 20%; font-weight: bold; color: #4338ca;" class="text-right">: Rp {{ number_format($package->price, 0, ',', '.') }}</td>
+                <td style="width: 20%; font-weight: bold; color: #4338ca;" class="text-right">: Rp {{ number_format($packagePrice ?? $package->calculated_price, 0, ',', '.') }}</td>
             </tr>
             <tr>
                 <td style="font-weight: bold; color: #475569;">Periode Layanan</td>

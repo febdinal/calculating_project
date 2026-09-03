@@ -31,11 +31,18 @@ class CalculatorService
                 : Package::where('slug', $package)->firstOrFail();
         }
 
-        $packagePrice = (float) ($package->price ?? 0);
-
         // Fetch all default included features for this package
         $defaultIncludedFeatures = $package->features()->with(['category', 'subFeatures'])->get();
         $includedFeatureIds = $defaultIncludedFeatures->pluck('id')->all();
+
+        // Hitung harga dasar paket dari penjumlahan fitur bawaan paket (bukan harga statis inputan)
+        $packagePrice = $package->slug === 'custom'
+            ? 0.0
+            : (float) $defaultIncludedFeatures->sum(function ($feature) {
+                return $feature->subFeatures->isNotEmpty()
+                    ? (float) $feature->subFeatures->sum('price')
+                    : (float) ($feature->price ?? 0);
+            });
 
         // Load the selected main features with their category and sub-features
         $cleanFeatureIds = array_filter(array_map('intval', $featureIds));

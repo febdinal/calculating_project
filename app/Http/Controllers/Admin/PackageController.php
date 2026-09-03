@@ -131,6 +131,7 @@ class PackageController extends Controller
     {
         $featureIds = $request->input('feature_ids', []);
         $package->features()->sync($featureIds);
+        $package->syncPriceFromFeatures();
 
         return redirect()->route('admin.packages.index')
             ->with('success', "Fitur bawaan untuk paket '{$package->name}' berhasil diperbarui.");

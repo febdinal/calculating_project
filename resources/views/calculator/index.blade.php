@@ -46,7 +46,7 @@
                     Paket {{ $selectedPackage->name }}
                 </span>
                 <span class="text-xs text-[var(--tally-ink-2)] font-mono">
-                    {{ $selectedPackage->slug === 'custom' ? '✨ Affordable Custom' : 'Rp ' . number_format($selectedPackage->price, 0, ',', '.') . ' / ' . $selectedPackage->period }}
+                    {{ $selectedPackage->slug === 'custom' ? '✨ Affordable Custom' : 'Rp ' . number_format($packageBasePrice, 0, ',', '.') . ' / ' . $selectedPackage->period }}
                 </span>
             </div>
             <h1 class="text-lg sm:text-xl font-extrabold text-[var(--tally-ink-0)] tracking-tight">
@@ -63,7 +63,7 @@
                 <select onchange="switchPackage(this.value)" class="appearance-none pl-3.5 pr-8 py-2 rounded-xl bg-[var(--tally-input-bg)] border border-[var(--tally-input-border)] text-xs text-[var(--tally-ink-0)] font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono shadow-sm">
                     @foreach ($allPackages as $pkg)
                         <option value="{{ $pkg->slug }}" {{ $pkg->id === $selectedPackage->id ? 'selected' : '' }}>
-                            Paket {{ $pkg->name }} ({{ $pkg->slug === 'custom' ? 'Affordable' : 'Rp ' . number_format($pkg->price, 0, ',', '.') }})
+                            Paket {{ $pkg->name }} ({{ $pkg->slug === 'custom' ? 'Affordable' : 'Rp ' . number_format($pkg->calculated_price, 0, ',', '.') }})
                         </option>
                     @endforeach
                 </select>
@@ -178,8 +178,8 @@
                     <!-- Base Package Price -->
                     <div class="flex items-center justify-between text-[var(--tally-ink-1)]">
                         <span>Harga Paket Dasar</span>
-                        <span class="font-bold text-[var(--tally-ink-0)] font-mono">
-                            Rp {{ number_format($selectedPackage->price, 0, ',', '.') }}
+                        <span class="font-bold text-[var(--tally-ink-0)] font-mono" id="summary-base-package-price">
+                            Rp {{ number_format($packageBasePrice, 0, ',', '.') }}
                         </span>
                     </div>
 
@@ -218,7 +218,7 @@
                 <div class="pt-4 border-t-2 border-[var(--tally-card-border)] space-y-1 bg-[var(--tally-subtle-bg)] -mx-5 -mb-5 p-5 rounded-b-3xl">
                     <span class="text-[10px] font-mono font-semibold text-[var(--tally-ink-2)] uppercase tracking-wider">TOTAL ESTIMASI BIAYA</span>
                     <div id="summary-total-price" class="text-xl font-black text-[var(--tally-ink-0)] font-mono tracking-tight">
-                        Rp {{ number_format($selectedPackage->price, 0, ',', '.') }}
+                        Rp {{ number_format($packageBasePrice, 0, ',', '.') }}
                     </div>
                     <p class="text-[10px] text-[var(--tally-ink-3)] font-mono">Estimasi per {{ $selectedPackage->period }}. Belum termasuk PPN jika berlaku.</p>
 
@@ -253,7 +253,7 @@
         id: {{ $selectedPackage->id }},
         name: "{{ $selectedPackage->name }}",
         slug: "{{ $selectedPackage->slug }}",
-        price: {{ (float) $selectedPackage->price }},
+        price: {{ (float) $packageBasePrice }},
         period: "{{ $selectedPackage->period }}"
     };
 

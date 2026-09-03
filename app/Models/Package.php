@@ -36,4 +36,38 @@ class Package extends Model
     {
         return $query->where('status', 'active');
     }
+
+    /**
+     * Hitung total harga paket dari seluruh fitur bawaannya.
+     */
+    public function getCalculatedPriceAttribute(): float
+    {
+        if ($this->slug === 'custom') {
+            return 0.0;
+        }
+
+        $features = $this->relationLoaded('features')
+            ? $this->features
+            : $this->features()->with('subFeatures')->get();
+
+        return (float) $features->sum(function ($feature) {
+            if ($feature->relationLoaded('subFeatures') && $feature->subFeatures->isNotEmpty()) {
+                return (float) $feature->subFeatures->sum('price');
+            }
+
+            if ($feature->subFeatures()->exists()) {
+                return (float) $feature->subFeatures()->sum('price');
+            }
+
+            return (float) ($feature->price ?? 0);
+        });
+    }
+
+    /**
+     * Sinkronisasi nilai kolom price paket dari total harga fitur bawaan.
+     */
+    public function syncPriceFromFeatures(): void
+    {
+        $this->update(['price' => $this->calculated_price]);
+    }
 }

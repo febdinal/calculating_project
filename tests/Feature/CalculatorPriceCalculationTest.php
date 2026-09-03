@@ -103,7 +103,7 @@ class CalculatorPriceCalculationTest extends TestCase
         $response = $this->get(route('packages.select'));
         $response->assertStatus(200);
         $response->assertSee('Medium');
-        $response->assertSee('Rp 8.000.000');
+        $response->assertSee('Rp 3.000.000');
     }
 
     public function test_kanban_calculator_page_loads_with_selected_package(): void
@@ -113,7 +113,7 @@ class CalculatorPriceCalculationTest extends TestCase
         $response->assertSee('Paket Medium');
         $response->assertSee('Website Responsive');
         $response->assertSee('Wishlist');
-        $response->assertSee('8.000.000');
+        $response->assertSee('3.000.000');
     }
 
     public function test_feature_price_is_calculated_from_sub_features_prices(): void
@@ -157,7 +157,7 @@ class CalculatorPriceCalculationTest extends TestCase
         ]);
 
         $this->assertEquals(900000, $result['additional_features_total']);
-        $this->assertEquals(8900000, $result['total']);
+        $this->assertEquals(3900000, $result['total']);
     }
 
     public function test_calculator_service_supports_custom_sub_feature_selection(): void
@@ -204,7 +204,7 @@ class CalculatorPriceCalculationTest extends TestCase
         $result = $service->calculate($package, [$katalog->id], [$sub1->id]);
 
         $this->assertEquals(500000, $result['additional_features_total']);
-        $this->assertEquals(8500000, $result['total']);
+        $this->assertEquals(500000, $result['total']);
         $this->assertEquals(500000, $result['additional_features'][0]['price']);
     }
 
@@ -252,15 +252,16 @@ class CalculatorPriceCalculationTest extends TestCase
         $service = new CalculatorService;
 
         // 1. When all sub-features of the included feature are selected:
+        // Package base price is sum of included features (1.200.000 + 800.000 = 2.000.000)
         $resFull = $service->calculate($package, [$webFeature->id], [$subWeb1->id, $subWeb2->id]);
-        $this->assertEquals(5000000, $resFull['total']);
+        $this->assertEquals(2000000, $resFull['total']);
         $this->assertEquals(0, $resFull['included_deduction']);
 
         // 2. When user unchecks $subWeb2 (800.000 deduction):
         $resDeducted = $service->calculate($package, [$webFeature->id], [$subWeb1->id]);
         $this->assertEquals(800000, $resDeducted['included_deduction']);
-        $this->assertEquals(4200000, $resDeducted['adjusted_package_price']);
-        $this->assertEquals(4200000, $resDeducted['total']);
+        $this->assertEquals(1200000, $resDeducted['adjusted_package_price']);
+        $this->assertEquals(1200000, $resDeducted['total']);
     }
 
     public function test_calculator_service_calculates_correct_price_formula(): void
@@ -278,16 +279,32 @@ class CalculatorPriceCalculationTest extends TestCase
         $result = $service->calculate($this->mediumPackage, $selectedFeatureIds);
 
         // Expected:
-        // Package Price: 8.000.000
+        // Package Base Price (sum of included features 2.000.000 + 1.000.000): 3.000.000
         // Included Features Count: 2
         // Additional Features Count: 2
         // Additional Features Total: 450.000 + 850.000 = 1.300.000
-        // Grand Total: 8.000.000 + 1.300.000 = 9.300.000
-        $this->assertEquals(8000000, $result['package_price']);
+        // Grand Total: 3.000.000 + 1.300.000 = 4.300.000
+        $this->assertEquals(3000000, $result['package_price']);
         $this->assertCount(2, $result['included_features']);
         $this->assertCount(2, $result['additional_features']);
         $this->assertEquals(1300000, $result['additional_features_total']);
-        $this->assertEquals(9300000, $result['total']);
+        $this->assertEquals(4300000, $result['total']);
+    }
+
+    public function test_package_price_follows_sum_of_features_not_inputted_price(): void
+    {
+        // Set manual inputted price to an arbitrary number
+        $this->mediumPackage->update(['price' => 99000000]);
+
+        $service = new CalculatorService;
+        $result = $service->calculate($this->mediumPackage, [
+            $this->websiteFeature->id,
+            $this->homepageFeature->id,
+        ]);
+
+        // Base price must be sum of features (2.000.000 + 1.000.000 = 3.000.000), NOT 99.000.000
+        $this->assertEquals(3000000, $result['package_price']);
+        $this->assertEquals(3000000, $result['total']);
     }
 
     public function test_calculator_api_endpoint_calculates_and_returns_clean_json(): void
@@ -306,9 +323,9 @@ class CalculatorPriceCalculationTest extends TestCase
         $response->assertJson([
             'package_id' => $this->mediumPackage->id,
             'package_name' => 'Medium',
-            'package_price' => 8000000,
+            'package_price' => 3000000,
             'additional_features_total' => 1300000,
-            'total' => 9300000,
+            'total' => 4300000,
         ]);
     }
 
